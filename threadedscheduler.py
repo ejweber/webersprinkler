@@ -26,12 +26,10 @@ while(stop != True):
         for event in schedule.queue:
             print(event.time, event.argument)
 
-    # throws an error if an event has previously been canceled
-    # event no longer in queue but still stored in sprinkler_events
-    # add code to cancel command that sets sprinkler_events back to none
     if command == 'stop':
         stop = True
         for name, event in sprinkler_events.items():
+            print(event)
             if event != None:
                 schedule.cancel(event)
 
