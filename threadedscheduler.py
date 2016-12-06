@@ -5,9 +5,11 @@ import time
 def background_tasks():
     schedule.run()
 
+sprinkler_events = {'A': None, 'B': None, 'C': None}
+
 schedule = scheduler(time.time, time.sleep)
-A = schedule.enter(10, 1, print, argument=('first',))
-B = schedule.enter(20, 1, print, argument=('second',))
+sprinkler_events['A'] = schedule.enter(10, 1, print, argument=('first',))
+sprinkler_events['B'] = schedule.enter(20, 1, print, argument=('second',))
 
 background = Thread(target=background_tasks)
 background.start()
@@ -24,17 +26,19 @@ while(stop != True):
         for event in schedule.queue:
             print(event.time, event.argument)
 
+    # throws an error if an event has previously been canceled
+    # event no longer in queue but still stored in sprinkler_events
+    # add code to cancel command that sets sprinkler_events back to none
     if command == 'stop':
         stop = True
-        schedule.cancel(A)
-        schedule.cancel(B)
+        for name, event in sprinkler_events.items():
+            if event != None:
+                schedule.cancel(event)
 
-    # does not work because 'A' is not the same thing as A
-    # need to create a data structure that holds event name (A) and string for
-    # user to type when cancelling 
     if 'cancel' in command:
-        event = command[-1]
-        print('Canceling ' + event)
+        program_letter = command[-1]
+        event = sprinkler_events[program_letter]
+        print('Canceling ' + program_letter)
         schedule.cancel(event)
 
 background.join()
