@@ -7,7 +7,7 @@ def print_delayed_times():
     background.enter(10, 1, print, argument=('last',))
     background.enter(5, 2, print, argument=('middle',))
     background.enter(5, 1, print, argument=('first',))
-    background.run()
+    background.run(blocking=False)
 
 # example of using a scheduler to start tasks at specific times
 def print_time():
@@ -24,4 +24,4 @@ def print_absolute_times():
     print(time.ctime())
     background.run()
 
-print_absolute_times()
+print_delayed_times()
