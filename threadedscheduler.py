@@ -37,9 +37,9 @@ while(stop != True):
 
     if 'cancel' in command:
         program_letter = command[-1]
-        event = sprinkler_events[program_letter]
         print('Canceling ' + program_letter)
-        schedule.cancel(event)
+        schedule.cancel(sprinkler_events[program_letter])
+        sprinkler_events[program_letter] = None
 
 background.join()
 
