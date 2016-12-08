@@ -13,3 +13,4 @@ def schedule_next(stripped_datetime):
 stripped_datetime = retreive_date()
 abs_time = schedule_next(stripped_datetime)
 print(abs_time)
+print(time.time())

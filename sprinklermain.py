@@ -1,6 +1,7 @@
 from threading import Thread
 from sched import scheduler
 import time
+from sprinklerdata import *
 
 # create global variables
 schedule = scheduler(time.time, time.sleep)
@@ -9,6 +10,7 @@ background = Thread(target=schedule.run())
 
 # main program executable
 def main():
+    load_programs()
     load_events()
     background.start()
     input_loop()
@@ -23,6 +25,10 @@ def input_loop():
         elif command == 'queue':    
             for event in schedule.queue:
                 print(event.time, event.argument)
+        elif 'modify' in command:
+            modify_programs(command[-1])
+        elif 'display' in command:
+            display_valve_times(command[-1])
         elif command == 'stop':
             stop = True
             for name, event in sprinkler_events.items():
