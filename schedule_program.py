@@ -11,6 +11,6 @@ def schedule_next(stripped_datetime):
     return time.mktime(datetime.timetuple(stripped_datetime))
     
 stripped_datetime = retreive_date()
-abs_time = schedule_next(stripped_datetime)
+abs_time = schedule_next(stripped_datetime, '%A %H:%M')
 print(abs_time)
 print(time.time())

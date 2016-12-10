@@ -1,4 +1,5 @@
 import pickle
+from datetime import datetime
 
 # define SprinklerProgram class
 class SprinklerProgram:
@@ -43,11 +44,24 @@ def load_programs():
     C = sprinkler_programs[2]
     file.close()
 
-# display valve times for program A, B, or C
-def display_valve_times(letter):
+# display valve and/or run times for programs A, B, or C
+def display_times(letter, option='all'):
     global A, B, C
     programs = {'A': A, 'B': B, 'C': C}
-    number = 1
-    for valve in programs[letter].valve_times:
-       print('Valve ' + str(number) + ': ' + valve)
-       number += 1
+    if option == 'all' or option == 'valve':
+        number = 1
+        for valve in programs[letter].valve_times:
+           print('Valve ' + str(number) + ': ' + valve)
+           number += 1
+    if option == 'all' or option == 'run':
+        for entry in programs[letter].run_times:
+            print(datetime.strftime(entry, '%A %H:%M'))
+
+# add weekday and time to sprinkler program
+def input_datetime(letter):
+    global A, B, C
+    programs = {'A': A, 'B': B, 'C': C}
+    raw_datetime = input('Enter weekday and time for program to run: ')
+    stripped_datetime = datetime.strptime(raw_datetime, '%A %H:%M')
+    programs['A'].run_times.append(stripped_datetime)
+    save_programs()

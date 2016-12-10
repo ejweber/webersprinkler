@@ -25,14 +25,18 @@ def input_loop():
         elif command == 'queue':    
             for event in schedule.queue:
                 print(event.time, event.argument)
-        elif 'modify' in command:
+        elif 'valves' in command:
+            display_times(command[-1], 'valve')
             modify_programs(command[-1])
         elif 'display' in command:
-            display_valve_times(command[-1])
+            display_times(command[-1])
+        elif 'schedule' in command:
+            display_times(command[-1], 'run')
+            input_datetime(command[-1])
         elif command == 'stop':
             stop = True
             for name, event in sprinkler_events.items():
-                if event != None:
+                if event is not None:
                     schedule.cancel(event)
         elif 'cancel' in command:
             program_letter = command[-1]
