@@ -5,18 +5,18 @@ from sprinklerdata import *
 
 # create global variables
 schedule = scheduler(time.time, time.sleep)
-sprinkler_events = {'A': None, 'B': None, 'C': None}
+queue = {}
 background = Thread(target=schedule.run())
 
 # main program executable
 def main():
-    load_programs()
-    load_events()
+    programs = load_programs()
+    schedule_stored_datetimes(programs, schedule, queue)
     background.start()
-    input_loop()
+    input_loop(programs)
     
 # loop that runs indefintely in the foreground, accepting user input
-def input_loop():
+def input_loop(programs):
     stop = False
     while stop == False:
         command = input('The scheduler is running. Type a command: ')
@@ -24,25 +24,29 @@ def input_loop():
             help_command()
         elif command == 'queue':    
             for event in schedule.queue:
-                print(event.time, event.argument)
+                temp_time = time.localtime(event.time)
+                print(event.argument, time.strftime('%A %H:%M', temp_time))
         elif 'valves' in command:
-            display_times(command[-1], 'valve')
-            modify_programs(command[-1])
+            display_times(programs, command[-1], 'valve')
+            modify_programs(programs, command[-1])
         elif 'display' in command:
-            display_times(command[-1])
+            display_times(programs, command[-1])
         elif 'schedule' in command:
-            display_times(command[-1], 'run')
-            input_datetime(command[-1])
+            display_times(programs, command[-1], 'run')
+            normalize_input_datetime(programs, command[-1])
         elif command == 'stop':
             stop = True
-            for name, event in sprinkler_events.items():
-                if event is not None:
+            for program, event_list in queue.items():
+                for event in event_list:
                     schedule.cancel(event)
         elif 'cancel' in command:
             program_letter = command[-1]
             print('Canceling ' + program_letter)
             schedule.cancel(sprinkler_events[program_letter])
             sprinkler_events[program_letter] = None
+        # DEBUG
+        elif command == 'test':
+            schedule_stored_datetimes(programs, schedule, queue)
 
 # print out list of commands that can be run
 def help_command():
@@ -51,12 +55,6 @@ def help_command():
                     'stop: cancel all programs in queue and stop scheduler'
                     )
     print(command_list)
-
-# initiate dictionary and fill with upcoming events
-# TODO - make this function general
-def load_events():
-    sprinkler_events['A'] = schedule.enter(10, 1, print, argument=('first',))
-    sprinkler_events['B'] = schedule.enter(20, 1, print, argument=('second',))
 
 # excecute main
 main()
