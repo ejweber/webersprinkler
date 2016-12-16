@@ -1,5 +1,6 @@
 import pickle
 from datetime import datetime, timedelta
+from sprinklercontrol import *
 
 # define SprinklerProgram class
 class SprinklerProgram:
@@ -13,7 +14,7 @@ def modify_programs(programs, letter):
     programs[letter].valve_times = []
     for zone in range(1, 6):
         time = input('Enter a time for zone ' + str(zone) + ': ')
-        programs[letter].valve_times.append(time)
+        programs[letter].valve_times.append(int(time))
     save_programs(programs)
 
 # save programs in pickle formatted file
@@ -44,7 +45,7 @@ def display_times(programs, letter, option='all'):
     if option == 'all' or option == 'valve':
         number = 1
         for valve in programs[letter].valve_times:
-           print('Valve ' + str(number) + ': ' + valve)
+           print('Valve ' + str(number) + ': ' + str(valve))
            number += 1
     if option == 'all' or option == 'run':
         for entry in programs[letter].run_times:
@@ -64,20 +65,26 @@ def normalize_input_datetime(programs, letter):
 
 # calculate the time until each event should run next using 'normalized' times
 # remove old events from schedule and add new ones
-
-def schedule_stored_datetimes(programs,schedule, queue):
+def schedule_stored_datetimes(programs, schedule, queue):
     now = normalize_current_datetime()
+    clear_queue(queue, schedule)
     for letter, program in programs.items():
+        number = 1
         for normal_time in program.run_times:
             difference = normal_time - now
             if difference < timedelta():
                 difference += timedelta(7)
             difference = difference.total_seconds()
-            scheduled_event = schedule.enter(difference, 1, print, argument=
-                                             program.letter)
-            number = 1
+            #scheduled_event = schedule.enter(difference, 1, run_program,
+                                             #argument=(programs,
+                                             #program.letter))
+            scheduled_event = schedule.enter(difference, 1, relay_test)
             queue[program.letter + str(number)] = scheduled_event
             number += 1
+
+def clear_queue(queue, schedule):
+    for name, event in queue.items():
+        schedule.cancel(event)
 
 # take current time and 'normalize' week beggining 5/1/16
 def normalize_current_datetime():
