@@ -24,16 +24,10 @@ def relay_test():
         time.sleep(sleep_time)
         GPIO.output(pump_zone, GPIO.HIGH)
 
-def run_program(programs, letter):
-    #DEBUG
-    f = open('test.txt', w)
-    print('program runs', file=f)
-    f.close()
-    
+def run_program(programs, letter):   
     GPIO.output(pump, GPIO.LOW)
     for zone in range(0, total_zones):
         GPIO.output(zones[zone], GPIO.LOW)
-        print(programs[letter].valve_times[zone])
         time.sleep(programs[letter].valve_times[zone])
         GPIO.output(zones[zone], GPIO.HIGH)
     GPIO.output(pump, GPIO.HIGH)

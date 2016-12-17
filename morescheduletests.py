@@ -15,19 +15,14 @@ inputlock = Lock()
 
 prepare_relay()
 
-schedule.enter(10, 1, relay_test)
-schedule.enter(20, 1, relay_test)
+schedule.enter(60, 1, relay_test)
+schedule.enter(70, 1, relay_test)
 
 background = Thread(target=schedule.run)
 
 background.start()
 
-#while True:
-#    try:
-#        time.sleep(1)
-#    except KeyboardInterrupt:
-#        input('input loop: ')
-
-while True:
-    why = input('input loop: ')
-    print(schedule.queue)
+for event in schedule.queue:
+    schedule.cancel(event)
+print(schedule.queue)
+background.join()

@@ -1,4 +1,4 @@
-from threading import Thread, active_count
+from threading import Thread, active_count, enumerate
 from sched import scheduler
 import time
 from sprinklerdata import *
@@ -6,7 +6,6 @@ from sprinklercontrol import *
 
 # create global variables
 schedule = scheduler(time.time, time.sleep)
-queue = {}
 background = Thread(target=schedule.run)
 
 def queue_check():
@@ -16,7 +15,7 @@ def queue_check():
 def main():
     prepare_relay()
     programs = load_programs()
-    schedule_stored_datetimes(programs, schedule, queue)
+    schedule_stored_datetimes(programs, schedule)
     queue_check()
     background.start()
     input_loop(programs)
@@ -25,8 +24,6 @@ def main():
 def input_loop(programs):
     stop = False
     while stop == False:
-        #DEBUG
-        print(active_count())
         command = input('The scheduler is running. Type a command: ')
         if command == help:
             help_command()
@@ -44,12 +41,12 @@ def input_loop(programs):
         elif 'schedule' in command:
             display_times(programs, command[-1], 'run')
             normalize_input_datetime(programs, command[-1])
+            schedule_stored_datetimes(programs, schedule)
         elif command == 'stop':
             cleanup()
             stop = True
-            for program, event_list in queue.items():
-                for event in event_list:
-                    schedule.cancel(event)
+            clear_queue(schedule, True)
+            background.join()
         elif 'cancel' in command:
             program_letter = command[-1]
             print('Canceling ' + program_letter)
@@ -57,9 +54,7 @@ def input_loop(programs):
             sprinkler_events[program_letter] = None
         # DEBUG
         elif command == 'test':
-            schedule_stored_datetimes(programs, schedule, queue)
-        elif command == 'test2':
-            time.sleep(1)
+            schedule_stored_datetimes(programs, schedule)
 # print out list of commands that can be run
 def help_command():
     command_list = ('queue: list the events currently in the queue\n'

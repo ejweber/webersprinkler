@@ -65,26 +65,30 @@ def normalize_input_datetime(programs, letter):
 
 # calculate the time until each event should run next using 'normalized' times
 # remove old events from schedule and add new ones
-def schedule_stored_datetimes(programs, schedule, queue):
+def schedule_stored_datetimes(programs, schedule):
     now = normalize_current_datetime()
-    clear_queue(queue, schedule)
+    clear_queue(schedule)
     for letter, program in programs.items():
-        number = 1
         for normal_time in program.run_times:
             difference = normal_time - now
             if difference < timedelta():
                 difference += timedelta(7)
             difference = difference.total_seconds()
-            #scheduled_event = schedule.enter(difference, 1, run_program,
-                                             #argument=(programs,
-                                             #program.letter))
-            scheduled_event = schedule.enter(difference, 1, relay_test)
-            queue[program.letter + str(number)] = scheduled_event
-            number += 1
+            schedule.enter(difference, 1, program_task,
+                           argument=(programs, program.letter, schedule))
 
-def clear_queue(queue, schedule):
-    for name, event in queue.items():
-        schedule.cancel(event)
+def program_task(programs, letter, schedule):
+    run_program(programs, letter)
+    schedule_stored_datetimes(programs, schedule)
+
+def clear_queue(schedule, stop_scheduler=False):
+    if stop_scheduler == False:
+        for event in schedule.queue:
+            if event[1] != 2:
+                schedule.cancel(event)
+    if stop_scheduler == True:
+        for event in schedule.queue:
+            schedule.cancel(event)
 
 # take current time and 'normalize' week beggining 5/1/16
 def normalize_current_datetime():
