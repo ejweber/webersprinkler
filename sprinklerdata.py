@@ -40,6 +40,9 @@ def load_programs():
     programs = {'A': A, 'B': B, 'C': C}
     return programs
 
+def queue_check(schedule):
+    check = schedule.enter(5, 2, queue_check, (schedule,))
+
 # display valve and/or run times for programs A, B, or C
 def display_times(programs, letter, option='all'):
     if option == 'all' or option == 'valve':
@@ -84,7 +87,7 @@ def program_task(programs, letter, schedule):
 def clear_queue(schedule, stop_scheduler=False):
     if stop_scheduler == False:
         for event in schedule.queue:
-            if event[1] != 2:
+            if event.priority != 2:
                 schedule.cancel(event)
     if stop_scheduler == True:
         for event in schedule.queue:
@@ -108,3 +111,19 @@ def index_day(day):
             'Friday': 5,
             'Saturday': 6
             }[day]
+
+def display_queue(schedule):
+    for event in schedule.queue:
+        if event.priority == 1:
+            temp_time = time.localtime(event.time)
+            letter = event[3][1]
+            print('Program', letter, '-', time.strftime('%A %H:%M', temp_time))
+            
+            difference = int(event.time - time.time())
+            extra_hours = difference % 86400
+            days = int((difference - extra_hours) / 86400)
+            extra_minutes = extra_hours % 3600
+            hours = int((extra_hours - extra_minutes) / 3600)
+            extra_seconds = extra_minutes % 60
+            minutes = int((extra_minutes - extra_seconds) / 60)
+            print('  -', days, 'days,', hours, 'hours,', minutes, 'minutes')

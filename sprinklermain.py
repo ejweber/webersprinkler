@@ -1,22 +1,36 @@
-from threading import Thread, active_count, enumerate
-from sched import scheduler
-import time
-from sprinklerdata import *
-from sprinklercontrol import *
+# webersprinkler version 1.0
+#
+# webersprinkler is an amateur attempt to build an irrigation controller out of
+# a Raspberry Pi 3 and a Sainsmart 8 channel relay. It is programmed entirely in
+# Python (3.4.2) using only the Python standard library installed by default
+# with Raspbian.
 
-# create global variables
+# In this version, interactions with webersprinkler rely fully on a command line
+# interface. A main input loop runs constantly in the 'foreground' thread,
+# waiting to accept user queries or commands. A 'background' thread runs in the
+# background and uses a scheduler (from the sched module) to wait for scheduled
+# times and activate the relay.
+
+# In this version, it is intended for webersprinkler to run constantly on a
+# Raspberry Pi 3 located wherever valve wires are accessible and connected to
+# local wireless. Interactions with the Raspberry Pi 3 are intended to occur
+# over SSH. This functionality has not been tested.
+
+from threading import Thread
+from sched import scheduler
+from sprinklerdata import *
+from sprinklercontrol import prepare_relay
+
+# create global scheduler and background thread for scheduler
 schedule = scheduler(time.time, time.sleep)
 background = Thread(target=schedule.run)
-
-def queue_check():
-    check = schedule.enter(5, 2, queue_check)
 
 # main program executable
 def main():
     prepare_relay()
     programs = load_programs()
     schedule_stored_datetimes(programs, schedule)
-    queue_check()
+    queue_check(schedule)
     background.start()
     input_loop(programs)
     
@@ -24,15 +38,11 @@ def main():
 def input_loop(programs):
     stop = False
     while stop == False:
-        command = input('The scheduler is running. Type a command: ')
-        if command == help:
+        command = input('\nThe scheduler is running. Type a command: ')
+        if command == 'hello':
             help_command()
         elif command == 'queue':    
-            for event in schedule.queue:
-                temp_time = time.localtime(event.time)
-                print(event[2], time.strftime('%A %H:%M', temp_time))
-                print(event.time, time.time())
-                print(event.time - time.time())
+            display_queue(schedule)
         elif 'valves' in command:
             display_times(programs, command[-1], 'valve')
             modify_programs(programs, command[-1])
@@ -47,19 +57,17 @@ def input_loop(programs):
             stop = True
             clear_queue(schedule, True)
             background.join()
-        elif 'cancel' in command:
-            program_letter = command[-1]
-            print('Canceling ' + program_letter)
-            schedule.cancel(sprinkler_events[program_letter])
-            sprinkler_events[program_letter] = None
-        # DEBUG
-        elif command == 'test':
-            schedule_stored_datetimes(programs, schedule)
+            
 # print out list of commands that can be run
 def help_command():
-    command_list = ('queue: list the events currently in the queue\n'
-                    'cancel []: cancel program indicated by included letter\n'
+    command_list = ('\n'
+                    'queue: list the events currently in the scheduler queue\n'
+                    'display []: display information for program [letter] '
+                    'or all programs\n'
+                    'valves []: update valve times for [letter]\n'
+                    'schedule []: schedule new time for program [letter]\n'
                     'stop: cancel all programs in queue and stop scheduler'
+                    '\n'
                     )
     print(command_list)
 
