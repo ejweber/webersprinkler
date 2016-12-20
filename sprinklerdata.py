@@ -1,53 +1,129 @@
 import pickle
+from datetime import datetime, timedelta
+from sprinklercontrol import *
 
 # define SprinklerProgram class
 class SprinklerProgram:
-    def __init__(self, program_letter):
-        self.program_letter = program_letter
+    def __init__(self, letter):
+        self.letter = letter
         self.valve_times = []
         self.run_times = []
 
-# create global sprinkler programs
-A = SprinklerProgram('A')
-B = SprinklerProgram('B')
-C = SprinklerProgram('C')
-
 # modify times for program A, B, or C
-def modify_programs(letter):
-    global A, B, C
-    programs = {'A': A, 'B': B, 'C': C}
+def modify_programs(programs, letter):
     programs[letter].valve_times = []
     for zone in range(1, 6):
         time = input('Enter a time for zone ' + str(zone) + ': ')
-        programs[letter].valve_times.append(time)
-    save_programs()
+        programs[letter].valve_times.append(int(time))
+    save_programs(programs)
 
-# save programs in json format
-def save_programs():
-    global A, B, C
-    file = open('saved_programs.json', 'wb')
-    sprinkler_programs = [A, B, C]
+# save programs in pickle formatted file
+def save_programs(programs):
+    file = open('saved_programs.p', 'wb')
+    sprinkler_programs = [programs['A'], programs['B'], programs['C']]
     pickle.dump(sprinkler_programs, file)
 
-# load programs from json formatted file
+# load programs from pickle formatted file
 def load_programs():
-    global A, B, C
     try:
-        file = open('saved_programs.json', 'rb')
+        file = open('saved_programs.p', 'rb')
+        sprinkler_programs = pickle.load(file)
+        A = sprinkler_programs[0]
+        B = sprinkler_programs[1]
+        C = sprinkler_programs[2]
+        file.close()
     except FileNotFoundError:
         print("No saved programs file found.")
-        return False
-    sprinkler_programs = pickle.load(file)
-    A = sprinkler_programs[0]
-    B = sprinkler_programs[1]
-    C = sprinkler_programs[2]
-    file.close()
-
-# display valve times for program A, B, or C
-def display_valve_times(letter):
-    global A, B, C
+        A = SprinklerProgram('A')
+        B = SprinklerProgram('B')
+        C = SprinklerProgram('C')
     programs = {'A': A, 'B': B, 'C': C}
-    number = 1
-    for valve in programs[letter].valve_times:
-       print('Valve ' + str(number) + ': ' + valve)
-       number += 1
+    return programs
+
+def queue_check(schedule):
+    check = schedule.enter(5, 2, queue_check, (schedule,))
+
+# display valve and/or run times for programs A, B, or C
+def display_times(programs, letter, option='all'):
+    if option == 'all' or option == 'valve':
+        number = 1
+        for valve in programs[letter].valve_times:
+           print('Valve ' + str(number) + ': ' + str(valve))
+           number += 1
+    if option == 'all' or option == 'run':
+        for entry in programs[letter].run_times:
+            print(datetime.strftime(entry, '%A %H:%M'))
+
+# take day and time input by user and 'normalize' to week beggining 5/1/16
+def normalize_input_datetime(programs, letter):
+    raw_input = input('Enter weekday and time for program to run: ')
+    split_input = raw_input.split(' ')
+    temp_day = index_day(split_input[0])
+    temp_time = datetime.strptime(split_input[1], '%H:%M')
+    stored_datetime = datetime(2016, 5, 1 + temp_day,)
+    offset = timedelta(hours=temp_time.hour, minutes=temp_time.minute)
+    stored_datetime += offset
+    programs[letter].run_times.append(stored_datetime)
+    save_programs(programs)
+
+# calculate the time until each event should run next using 'normalized' times
+# remove old events from schedule and add new ones
+def schedule_stored_datetimes(programs, schedule):
+    now = normalize_current_datetime()
+    clear_queue(schedule)
+    for letter, program in programs.items():
+        for normal_time in program.run_times:
+            difference = normal_time - now
+            if difference < timedelta():
+                difference += timedelta(7)
+            difference = difference.total_seconds()
+            schedule.enter(difference, 1, program_task,
+                           argument=(programs, program.letter, schedule))
+
+def program_task(programs, letter, schedule):
+    run_program(programs, letter)
+    schedule_stored_datetimes(programs, schedule)
+
+def clear_queue(schedule, stop_scheduler=False):
+    if stop_scheduler == False:
+        for event in schedule.queue:
+            if event.priority != 2:
+                schedule.cancel(event)
+    if stop_scheduler == True:
+        for event in schedule.queue:
+            schedule.cancel(event)
+
+# take current time and 'normalize' week beggining 5/1/16
+def normalize_current_datetime():
+    now = datetime.now()
+    day = datetime.strftime(now, '%w')
+    stored_datetime = datetime(2016, 5, 1 + int(day),
+                           now.hour, now.minute, now.second)
+    return(stored_datetime)
+    
+# return integer from 0-6 based on day input by user
+def index_day(day):
+    return {'Sunday': 0,
+            'Monday': 1,
+            'Tuesday': 2,
+            'Wednesday': 3,
+            'Thursday': 4,
+            'Friday': 5,
+            'Saturday': 6
+            }[day]
+
+def display_queue(schedule):
+    for event in schedule.queue:
+        if event.priority == 1:
+            temp_time = time.localtime(event.time)
+            letter = event[3][1]
+            print('Program', letter, '-', time.strftime('%A %H:%M', temp_time))
+            
+            difference = int(event.time - time.time())
+            extra_hours = difference % 86400
+            days = int((difference - extra_hours) / 86400)
+            extra_minutes = extra_hours % 3600
+            hours = int((extra_hours - extra_minutes) / 3600)
+            extra_seconds = extra_minutes % 60
+            minutes = int((extra_minutes - extra_seconds) / 60)
+            print('  -', days, 'days,', hours, 'hours,', minutes, 'minutes')

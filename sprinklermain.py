@@ -1,58 +1,75 @@
+# webersprinkler version 1.0
+#
+# webersprinkler is an amateur attempt to build an irrigation controller out of
+# a Raspberry Pi 3 and a Sainsmart 8 channel relay. It is programmed entirely in
+# Python (3.4.2) using only the Python standard library installed by default
+# with Raspbian.
+
+# In this version, interactions with webersprinkler rely fully on a command line
+# interface. A main input loop runs constantly in the 'foreground' thread,
+# waiting to accept user queries or commands. A 'background' thread runs in the
+# background and uses a scheduler (from the sched module) to wait for scheduled
+# times and activate the relay.
+
+# In this version, it is intended for webersprinkler to run constantly on a
+# Raspberry Pi 3 located wherever valve wires are accessible and connected to
+# local wireless. Interactions with the Raspberry Pi 3 are intended to occur
+# over SSH. This functionality has not been tested.
+
 from threading import Thread
 from sched import scheduler
-import time
 from sprinklerdata import *
+from sprinklercontrol import prepare_relay
 
-# create global variables
+# create global scheduler and background thread for scheduler
 schedule = scheduler(time.time, time.sleep)
-sprinkler_events = {'A': None, 'B': None, 'C': None}
-background = Thread(target=schedule.run())
+background = Thread(target=schedule.run)
 
 # main program executable
 def main():
-    load_programs()
-    load_events()
+    prepare_relay()
+    programs = load_programs()
+    schedule_stored_datetimes(programs, schedule)
+    queue_check(schedule)
     background.start()
-    input_loop()
+    input_loop(programs)
     
 # loop that runs indefintely in the foreground, accepting user input
-def input_loop():
+def input_loop(programs):
     stop = False
     while stop == False:
-        command = input('The scheduler is running. Type a command: ')
-        if command == help:
+        command = input('\nThe scheduler is running. Type a command: ')
+        if command == 'hello':
             help_command()
         elif command == 'queue':    
-            for event in schedule.queue:
-                print(event.time, event.argument)
-        elif 'modify' in command:
-            modify_programs(command[-1])
+            display_queue(schedule)
+        elif 'valves' in command:
+            display_times(programs, command[-1], 'valve')
+            modify_programs(programs, command[-1])
         elif 'display' in command:
-            display_valve_times(command[-1])
+            display_times(programs, command[-1])
+        elif 'schedule' in command:
+            display_times(programs, command[-1], 'run')
+            normalize_input_datetime(programs, command[-1])
+            schedule_stored_datetimes(programs, schedule)
         elif command == 'stop':
+            cleanup()
             stop = True
-            for name, event in sprinkler_events.items():
-                if event != None:
-                    schedule.cancel(event)
-        elif 'cancel' in command:
-            program_letter = command[-1]
-            print('Canceling ' + program_letter)
-            schedule.cancel(sprinkler_events[program_letter])
-            sprinkler_events[program_letter] = None
-
+            clear_queue(schedule, True)
+            background.join()
+            
 # print out list of commands that can be run
 def help_command():
-    command_list = ('queue: list the events currently in the queue\n'
-                    'cancel []: cancel program indicated by included letter\n'
+    command_list = ('\n'
+                    'queue: list the events currently in the scheduler queue\n'
+                    'display []: display information for program [letter] '
+                    'or all programs\n'
+                    'valves []: update valve times for [letter]\n'
+                    'schedule []: schedule new time for program [letter]\n'
                     'stop: cancel all programs in queue and stop scheduler'
+                    '\n'
                     )
     print(command_list)
-
-# initiate dictionary and fill with upcoming events
-# TODO - make this function general
-def load_events():
-    sprinkler_events['A'] = schedule.enter(10, 1, print, argument=('first',))
-    sprinkler_events['B'] = schedule.enter(20, 1, print, argument=('second',))
 
 # excecute main
 main()
