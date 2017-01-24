@@ -1,3 +1,4 @@
+# import necessary modules
 import pickle
 from datetime import datetime, timedelta
 from sprinklercontrol import *
@@ -9,12 +10,12 @@ class SprinklerProgram:
         self.valve_times = []
         self.run_times = []
 
-# modify times for program A, B, or C
+# modify valve times for program A, B, or C
 def modify_programs(programs, letter):
     programs[letter].valve_times = []
     for zone in range(1, 6):
-        time = input('Enter a time for zone ' + str(zone) + ': ')
-        programs[letter].valve_times.append(int(time))
+        time = input('Enter a time (in minutes) for zone ' + str(zone) + ': ')
+        programs[letter].valve_times.append(int(time) * 60)
     save_programs(programs)
 
 # save programs in pickle formatted file
@@ -32,29 +33,45 @@ def load_programs():
         B = sprinkler_programs[1]
         C = sprinkler_programs[2]
         file.close()
+    # create new programs if no saved programs are found
     except FileNotFoundError:
         print("No saved programs file found.")
         A = SprinklerProgram('A')
         B = SprinklerProgram('B')
         C = SprinklerProgram('C')
+    # create dictionary of programs to be passed between functions
     programs = {'A': A, 'B': B, 'C': C}
     return programs
 
+# create schedule event that refreshes every five seconds
+# ensures new events added to queue will run
+# otherwise scheduler waits for current event to run before checking queue
 def queue_check(schedule):
     check = schedule.enter(5, 2, queue_check, (schedule,))
 
 # display valve and/or run times for programs A, B, or C
 def display_times(programs, letter, option='all'):
+    # display valve times
     if option == 'all' or option == 'valve':
         number = 1
+        print('Valve times:')
+        if programs[letter].valve_times == []:
+            print('  No valve times')
         for valve in programs[letter].valve_times:
-           print('Valve ' + str(number) + ': ' + str(valve))
-           number += 1
+            print('  Valve ' + str(number) + ': ' + '{0:g}'.format(valve / 60))
+            number += 1
+    # display run times
     if option == 'all' or option == 'run':
+        print('Run times:')
+        if programs[letter].run_times == []:
+            print('  No run times')
+        programs[letter].run_times.sort()
         for entry in programs[letter].run_times:
-            print(datetime.strftime(entry, '%A %H:%M'))
+            print('  ' + datetime.strftime(entry, '%A %H:%M'))
 
 # take day and time input by user and 'normalize' to week beggining 5/1/16
+# all datetimes are compared while 'normalized' in this way
+# allows program to determine what should happen next
 def normalize_input_datetime(programs, letter):
     raw_input = input('Enter weekday and time for program to run: ')
     split_input = raw_input.split(' ')
@@ -80,15 +97,20 @@ def schedule_stored_datetimes(programs, schedule):
             schedule.enter(difference, 1, program_task,
                            argument=(programs, program.letter, schedule))
 
+# actual task to be run by scheduler
+# run progam and update queue so program runs again in a week
 def program_task(programs, letter, schedule):
     run_program(programs, letter)
     schedule_stored_datetimes(programs, schedule)
 
+# clear queue of scheduled events
 def clear_queue(schedule, stop_scheduler=False):
+    # clear only sprinkler programs if schedule will persist
     if stop_scheduler == False:
         for event in schedule.queue:
             if event.priority != 2:
                 schedule.cancel(event)
+    # clear queue_check too so that background process can stop
     if stop_scheduler == True:
         for event in schedule.queue:
             schedule.cancel(event)
@@ -112,13 +134,16 @@ def index_day(day):
             'Saturday': 6
             }[day]
 
+# display list of events currently in queue
 def display_queue(schedule):
     for event in schedule.queue:
+        # exclude queue_check (to avoid confusing users)
         if event.priority == 1:
+            # display program letter and absolute time
             temp_time = time.localtime(event.time)
-            letter = event[3][1]
+            letter = event.argument[1]
             print('Program', letter, '-', time.strftime('%A %H:%M', temp_time))
-            
+            # calculate time until execution and display
             difference = int(event.time - time.time())
             extra_hours = difference % 86400
             days = int((difference - extra_hours) / 86400)
@@ -127,3 +152,10 @@ def display_queue(schedule):
             extra_seconds = extra_minutes % 60
             minutes = int((extra_minutes - extra_seconds) / 60)
             print('  -', days, 'days,', hours, 'hours,', minutes, 'minutes')
+
+# clear all run times for a particular program after confirmation
+def clear_program(programs, letter):
+    confirm = input('Type yes to clear schedule for program ' + letter + ': ')
+    if confirm == 'yes':
+        programs[letter].run_times = []
+        save_programs(programs)
