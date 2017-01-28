@@ -84,7 +84,13 @@ def emergency_stop():
     chan_list = zones + [pump]
     GPIO.output(chan_list, GPIO.HIGH)
 
-# cleanup GPIO
-# included here so sprinklermain can avoid importing sprinklercontrol        
+# cleanup GPIO     
 def cleanup():
     GPIO.cleanup()
+    
+if __name__ == "__main__":
+    prepare_relay()
+    relay_test()
+    cleanup()
+    
+
