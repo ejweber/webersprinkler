@@ -43,12 +43,6 @@ def load_programs():
     programs = {'A': A, 'B': B, 'C': C}
     return programs
 
-# create schedule event that refreshes every five seconds
-# ensures new events added to queue will run
-# otherwise scheduler waits for current event to run before checking queue
-def queue_check(schedule):
-    check = schedule.enter(5, 2, queue_check, (schedule,))
-
 # display valve and/or run times for programs A, B, or C
 def display_times(programs, letter, option='all'):
     # display valve times
@@ -83,38 +77,6 @@ def normalize_input_datetime(programs, letter):
     programs[letter].run_times.append(stored_datetime)
     save_programs(programs)
 
-# calculate the time until each event should run next using 'normalized' times
-# remove old events from schedule and add new ones
-def schedule_stored_datetimes(programs, schedule):
-    now = normalize_current_datetime()
-    clear_queue(schedule)
-    for letter, program in programs.items():
-        for normal_time in program.run_times:
-            difference = normal_time - now
-            if difference < timedelta():
-                difference += timedelta(7)
-            difference = difference.total_seconds()
-            schedule.enter(difference, 1, program_task,
-                           argument=(programs, program.letter, schedule))
-
-# actual task to be run by scheduler
-# run progam and update queue so program runs again in a week
-def program_task(programs, letter, schedule):
-    run_program(programs, letter)
-    schedule_stored_datetimes(programs, schedule)
-
-# clear queue of scheduled events
-def clear_queue(schedule, stop_scheduler=False):
-    # clear only sprinkler programs if schedule will persist
-    if stop_scheduler == False:
-        for event in schedule.queue:
-            if event.priority != 2:
-                schedule.cancel(event)
-    # clear queue_check too so that background process can stop
-    if stop_scheduler == True:
-        for event in schedule.queue:
-            schedule.cancel(event)
-
 # take current time and 'normalize' week beggining 5/1/16
 def normalize_current_datetime():
     now = datetime.now()
@@ -134,28 +96,11 @@ def index_day(day):
             'Saturday': 6
             }[day]
 
-# display list of events currently in queue
-def display_queue(schedule):
-    for event in schedule.queue:
-        # exclude queue_check (to avoid confusing users)
-        if event.priority == 1:
-            # display program letter and absolute time
-            temp_time = time.localtime(event.time)
-            letter = event.argument[1]
-            print('Program', letter, '-', time.strftime('%A %H:%M', temp_time))
-            # calculate time until execution and display
-            difference = int(event.time - time.time())
-            extra_hours = difference % 86400
-            days = int((difference - extra_hours) / 86400)
-            extra_minutes = extra_hours % 3600
-            hours = int((extra_hours - extra_minutes) / 3600)
-            extra_seconds = extra_minutes % 60
-            minutes = int((extra_minutes - extra_seconds) / 60)
-            print('  -', days, 'days,', hours, 'hours,', minutes, 'minutes')
-
 # clear all run times for a particular program after confirmation
 def clear_program(programs, letter):
     confirm = input('Type yes to clear schedule for program ' + letter + ': ')
     if confirm == 'yes':
         programs[letter].run_times = []
         save_programs(programs)
+        
+if __name__ == '__main__':

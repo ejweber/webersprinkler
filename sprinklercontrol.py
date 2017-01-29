@@ -36,6 +36,30 @@ def run_program(programs, letter):
         GPIO.output(zones[zone], GPIO.HIGH)
     GPIO.output(pump, GPIO.HIGH)
 
+# run specified pump and zone for specified time
+def run_manual(zone, run_time):
+    GPIO.output(pump, GPIO.LOW)
+    GPIO.output(zones[zone], GPIO.LOW)
+    time.sleep(run_time)
+    GPIO.output(pump, GPIO.HIGH)
+    GPIO.output(zones[zone], GPIO.HIGH)
+
+# stop pump and all zones
+def emergency_stop():
+    chan_list = zones + [pump]
+    GPIO.output(chan_list, GPIO.HIGH)
+
+# cleanup GPIO     
+def cleanup():
+    GPIO.cleanup()
+    
+if __name__ == "__main__":
+    prepare_relay()
+    relay_test()
+    cleanup()
+    
+'''
+NO LONGER NECESSARY IN SERVER BRANCH
 # allow user to specify single program or zone to run immediately
 def manual_mode(programs):
     while True:
@@ -70,27 +94,6 @@ def manual_mode(programs):
                 emergency_stop()
         if command == 'done':
             break
-
-# run specified pump and zone for specified time
-def run_manual(zone, run_time):
-    GPIO.output(pump, GPIO.LOW)
-    GPIO.output(zones[zone], GPIO.LOW)
-    time.sleep(run_time)
-    GPIO.output(pump, GPIO.HIGH)
-    GPIO.output(zones[zone], GPIO.HIGH)
-
-# stop pump and all zones
-def emergency_stop():
-    chan_list = zones + [pump]
-    GPIO.output(chan_list, GPIO.HIGH)
-
-# cleanup GPIO     
-def cleanup():
-    GPIO.cleanup()
-    
-if __name__ == "__main__":
-    prepare_relay()
-    relay_test()
-    cleanup()
+'''
     
 
