@@ -27,7 +27,7 @@ if __name__ == '__main__':
 '''
 
 # import necessary modules
-import socket
+import socket, pickle
 from sprinklercontrol import *
 from sprinklerdata import load_programs, SprinklerProgram
 
@@ -45,18 +45,23 @@ def server_setup():
 # block until daemon recieves instructions and output as a string
 def recieve(s):
     s.listen(1)
-    print('listening for instructions.')
+    print('listening for instructions')
     c, addr = s.accept()
-    data = c.recv(1024).decode('utf-8')
-    print(str(addr) + " sent '" + data + "'")
+    data = pickle.loads(c.recv(1024))
+    print(str(addr) + ' sent '+ str(data))
+    c.send('instructions recieved by server'.encode('utf-8'))
     c.close()
     return data
     
 def parse(data, programs):
     if 'run' in data:
         if 'program' in data:
-            letter = data[-1]
+            letter = data[2]
             run_program(programs, letter)
+        if 'zone' in data:
+            zone = int(data[2])
+            time = int(data[3])
+            run_manual(zone, time)
         
 if __name__ == '__main__':
     prepare_relay()
