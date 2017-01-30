@@ -28,11 +28,14 @@ def relay_test():
         GPIO.output(pump_zone, GPIO.HIGH)
 
 # run pump and zones for times specified by SprinklerProgram.run_times 
-def run_program(programs, letter):   
+def run_program(programs, letter, flag=None):   
     GPIO.output(pump, GPIO.LOW)
     for zone in range(0, total_zones):
-        GPIO.output(zones[zone], GPIO.LOW)
-        time.sleep(programs[letter].valve_times[zone])
+        start_time = time.time()
+        run_time = programs[letter].valve_times[zone]
+        while (time.time() - start_time) < run_time and (flag.is_set() or
+                                                          not flag):
+            GPIO.output(zones[zone], GPIO.LOW)
         GPIO.output(zones[zone], GPIO.HIGH)
     GPIO.output(pump, GPIO.HIGH)
 
@@ -57,43 +60,5 @@ if __name__ == "__main__":
     prepare_relay()
     relay_test()
     cleanup()
-    
-'''
-NO LONGER NECESSARY IN SERVER BRANCH
-# allow user to specify single program or zone to run immediately
-def manual_mode(programs):
-    while True:
-        command = input("Enter 'program [A,B,C]' or 'zone [1-5] [time]' "
-                        "or 'done': ")
-        # allow for single program to run
-        if 'program' in command:
-            if command[-1] in 'ABC' and command[-2] == ' ':
-                if programs[command[-1]].valve_times == []:
-                    print('Valve times not set for program ' + command[-1] + '.')
-                else:
-                    try:
-                        print('Running program ' + command[-1] + '...')
-                        print("Use ^C to cancel if necessary.")    
-                        run_program(programs, command[-1])
-                    # allow user to cancel program if necessary
-                    except KeyboardInterrupt:
-                        print('\nProgram ' + command[-1] + ' canceled.')
-                        emergency_stop()
-        # allow for single zone to run
-        if 'zone' in command:
-            split_command = command.split(' ')
-            zone = split_command[1]
-            run_time = split_command[2]
-            try:
-                print('Running zone ' + zone + ' for ' + run_time + ' minutes'
-                       '...')
-                print('Use ^C to cancel if necessary') 
-                run_manual(int(zone), int(run_time) * 60)
-            except KeyboardInterrupt:
-                print('\nZone ' + str(zone) + ' canceled.')
-                emergency_stop()
-        if command == 'done':
-            break
-'''
     
 

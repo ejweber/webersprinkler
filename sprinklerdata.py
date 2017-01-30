@@ -102,5 +102,3 @@ def clear_program(programs, letter):
     if confirm == 'yes':
         programs[letter].run_times = []
         save_programs(programs)
-        
-if __name__ == '__main__':
