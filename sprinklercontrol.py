@@ -38,14 +38,20 @@ def run_program(programs, letter, flag=None):
             GPIO.output(zones[zone], GPIO.LOW)
         GPIO.output(zones[zone], GPIO.HIGH)
     GPIO.output(pump, GPIO.HIGH)
+    if flag:
+        flag.clear()
 
 # run specified pump and zone for specified time
-def run_manual(zone, run_time):
-    GPIO.output(pump, GPIO.LOW)
-    GPIO.output(zones[zone], GPIO.LOW)
-    time.sleep(run_time)
+def run_manual(zone, run_time, flag=None):
+    start_time = time.time()
+    while (time.time() - start_time) < run_time and (flag.is_set() or 
+                                                      not flag):
+        GPIO.output(pump, GPIO.LOW)
+        GPIO.output(zones[zone], GPIO.LOW)
     GPIO.output(pump, GPIO.HIGH)
     GPIO.output(zones[zone], GPIO.HIGH)
+    if flag:
+        flag.clear()
 
 # stop pump and all zones
 def emergency_stop():

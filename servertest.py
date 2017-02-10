@@ -49,8 +49,15 @@ def parse(data, programs):
                 return 'The server has agreed to run program ' + letter + '.'
         if 'zone' in data:
             zone = int(data[2])
-            time = int(data[3])
-            run_manual(zone, time)
+            run_time = int(data[3])
+            run_minutes = str(int(run_time / 60))
+            if not running.is_set():
+                running.set()
+                control = Thread(target=run_manual, args=(zone, run_time, 
+                                                          running))
+                control.start()
+                return ('The server has agreed to run zone ' + str(zone) + 
+                         ' for ' + run_minutes + ' minutes.')
     if 'change' in data:
         programs = load_programs()
         schedule_stored_datetimes(programs)
@@ -80,7 +87,7 @@ def schedule_stored_datetimes(programs):
                 difference += timedelta(7)
             difference = difference.total_seconds()
             schedule.enter(difference, 1, program_task,
-                           argument=(programs, program.letter, schedule))
+                           argument=(programs, program.letter))
                            
 # actual task to be run by scheduler
 # run progam and update queue so program runs again in a week
@@ -92,8 +99,8 @@ def program_task(programs, letter):
         control.start()
     else:
         print('unable to run scheduled program')
-    run_program(programs, letter)
-    schedule_stored_datetimes(programs, schedule)
+    run_program(programs, letter, running)
+    schedule_stored_datetimes(programs)
                            
 # create schedule event that refreshes every five seconds
 # ensures new events added to queue will run

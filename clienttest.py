@@ -62,27 +62,25 @@ def manual_mode(programs):
                 if programs[letter].valve_times == []:
                     print('Valve times not set for program ' + letter + '.')
                 else:
-                    print('Instructing server to run program ' + letter + '...')    
+                    print('Instructing the server to run program ' + letter + 
+                           '...')    
                     response = communicate('run program ' + letter)
                     print(response)
-                    # allow user to cancel program if necessary
             else:
                 print('Proper syntax: program [A, B, C]')
         # allow for single zone to run
         if 'zone' in command:
-            split_command = command.split(' ')
-            zone = split_command[1]
-            run_time = split_command[2]
-            try:
-                print('Running zone ' + zone + ' for ' + run_time + ' minutes'
-                       '...')
-                print('Use ^C to cancel if necessary') 
-                run_manual(int(zone), int(run_time) * 60)
-            except KeyboardInterrupt:
-                print('\nZone ' + str(zone) + ' canceled.')
-                emergency_stop()
+            number = command[1]
+            run_time = command[2]
+            run_seconds = str(int(run_time) * 60)
+            print('Instructing server to run zone ' + number + ' for ' 
+                   + run_time + ' minutes...')
+            response = communicate('run zone ' + number + ' ' + run_seconds)
+            print(response)
+        # allow user to cancel program if necessary
         if 'stop' in command:
             stop_sprinklers()
+        # break from manual input loop
         if 'done' in command:
             break
 
@@ -124,6 +122,19 @@ def communicate(message):
             return 'The server did not respond.'
         else:
             return response
+            
+# print out list of commands that can be run
+def help_command():
+    command_list = ('help: display list of commands\n'
+                    'queue: list the events currently in the scheduler queue\n'
+                    'display []: display information for program [A,B,C]\n'
+                    'valves []: update valve times for program [A,B,C]\n'
+                    'schedule []: schedule new time for program [A,B,C]\n'
+                    'stop: cancel all programs in queue and stop scheduler\n'
+                    'clear []: clear all run times for program [A,B,C]\n'
+                    'manual: enter manual mode to run a program or zone now'
+                    )
+    print(command_list)
     
 if __name__ == '__main__':
     programs = load_programs()
