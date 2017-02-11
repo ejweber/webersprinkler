@@ -1,7 +1,6 @@
 # import necessary modules
 import pickle
 from datetime import datetime, timedelta
-from sprinklercontrol import *
 
 # define SprinklerProgram class
 class SprinklerProgram:
