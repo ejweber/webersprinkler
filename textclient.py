@@ -1,5 +1,16 @@
-# globally accessible variables
-host = '127.0.0.1'
+# webersprinkler textclient version 1.0
+
+# textclient is an adaptation of the original webersprinkler script, which ran
+# as a single process accessible via SSH and 'screen.' Programs can be modified,
+# and sprinkler programs and individual zones can be run via command line
+# interface.
+
+# Commands that modifiy programs load and modifify saved_programs.p directly and
+# then communicate to the server so that it will load in the most recent
+# changes. Manual commands are sent directly to the server for execution.
+
+# globally accessible network variables
+host = '192.168.1.3'
 port = 5000
 
 import socket, time, pickle
@@ -48,6 +59,8 @@ def input_loop(programs):
                 print('Proper syntax: clear [A, B, C]')
         elif command == 'manual':
             manual_mode(programs)
+        elif command == 'exit':
+            break
             
 # allow user to specify single program or zone to run immediately
 def manual_mode(programs):
@@ -90,7 +103,7 @@ def stop_sprinklers():
     response = communicate('stop')
     print(response)
             
-# display list of events currently in queue
+# display list of events currently in server queue
 def display_queue():
     queue = communicate('queue')
     if 'server' in queue:
@@ -112,6 +125,7 @@ def display_queue():
         minutes = int((extra_minutes - extra_seconds) / 60)
         print('  -', days, 'days,', hours, 'hours,', minutes, 'minutes')
 
+# send message to server and recieve response
 def communicate(message):
         message = message.split(' ')
         s = socket.socket()   
@@ -130,7 +144,7 @@ def help_command():
                     'display []: display information for program [A,B,C]\n'
                     'valves []: update valve times for program [A,B,C]\n'
                     'schedule []: schedule new time for program [A,B,C]\n'
-                    'stop: cancel all programs in queue and stop scheduler\n'
+                    'stop: stop running program or zone\n'
                     'clear []: clear all run times for program [A,B,C]\n'
                     'manual: enter manual mode to run a program or zone now'
                     )
