@@ -16,9 +16,8 @@
 # versions will output to a log file.
 
 # import necessary modules
-import socket, pickle
-from sprinklercontrol import *
-from sprinklerdata import *
+import socket, pickle, time
+from sprinklersystem import SprinklerSystem, SprinklerProgram
 from threading import Thread, Event
 from sched import scheduler
 
@@ -32,10 +31,17 @@ schedule = scheduler(time.time, time.sleep)
 # global sprinkler control flag
 running = Event()
 
+# global sprinkler system
+sprinklers = SprinklerSystem()
+
+# global control thread identifier
+control = None
+
 # set up and return socket
 def server_setup():
     global host, port
     s = socket.socket()
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
     return s
     
@@ -53,27 +59,41 @@ def info_send(c, response):
     c.close()
     
 # analyze recieved command and execute necessary function
-def parse(data, programs):
+def parse(data):
     if 'run' in data:
+        global control
+        r_string = ''
+        if running.is_set():
+            r_string = ('The controller was already running and had to be '
+                        'stopped.\n')
+            running.clear()
+            control.join()
         if 'program' in data:
             letter = data[2]
-            if not running.is_set():
-                running.set()
-                control = Thread(target=run_program, args=(programs, letter,
-                                                           running))
-                control.start()
-                return 'The server has agreed to run program ' + letter + '.'
+            programmed_valves = len(sprinklers.programs[letter].valve_times)
+            if programmed_valves == 0:
+                r_string = (r_string + 'No valve times have been set for '
+                            'program ' + letter + '.')
+                return r_string
+            running.set()
+            control = Thread(target=sprinklers.programs[letter].run, 
+                             args=(running,))
+            control.start()
+            r_string = (r_string + 'The server has agreed to run program ' +
+                        letter + '.')
+            return r_string
         if 'zone' in data:
             zone = int(data[2])
             run_time = int(data[3])
             run_minutes = str(int(run_time / 60))
             if not running.is_set():
                 running.set()
-                control = Thread(target=run_manual, args=(zone, run_time, 
-                                                          running))
+                control = Thread(target=sprinklers.run_zone, args=(zone, 
+                                 run_time, running))
                 control.start()
-                return ('The server has agreed to run zone ' + str(zone) + 
-                         ' for ' + run_minutes + ' minutes.')
+                r_string = (r_string + 'The server has agreed to run zone ' + 
+                            str(zone) + ' for ' + run_minutes + ' minutes.')
+                return r_string
     if 'change' in data:
         programs = load_programs()
         schedule_stored_datetimes(programs)
@@ -89,34 +109,50 @@ def parse(data, programs):
             return 'The server has agreed to stop the controller.'
         if not running.is_set():
             return 'The server reports that the controller was not running.'
-        
+    if 'display' in data:
+        letter = data[1]
+        information = {'valve_times': sprinklers.programs[letter].valve_times,
+                       'run_times': sprinklers.programs[letter].list_times()
+                      }
+        return information
+    if 'valves' in data:
+        letter = data[1]
+        new_times = data[2]
+        sprinklers.programs[letter].valve_times = new_times
+        sprinklers.save()
+        return 'The server has made the change.'
+    if 'schedule' in data:
+        letter = data[1]
+        new_time = (data[2], data[3])
+        sprinklers.programs[letter].store_time(new_time)
+        schedule_stored_datetimes()
+        sprinklers.save()
+        return 'The server has made the change.'
+    if 'clear' in data:
+        letter = data[1]
+        sprinklers.programs[letter].valve_times = []
+        sprinklers.programs[letter].run_times = []
+        return 'The server has made the change.'
             
 # calculate the time until each event should run next using 'normalized' times
 # remove old events from schedule and add new ones
-def schedule_stored_datetimes(programs):
-    now = normalize_current_datetime()
+def schedule_stored_datetimes():
     clear_queue()
-    for letter, program in programs.items():
-        for normal_time in program.run_times:
-            difference = normal_time - now
-            if difference < timedelta():
-                difference += timedelta(7)
-            difference = difference.total_seconds()
-            schedule.enter(difference, 1, program_task,
-                           argument=(programs, program.letter))
+    for program in [sprinklers.A, sprinklers.B, sprinklers.C]:
+        for time in program.next_times():
+            schedule.enter(time, 1, program_task,
+                           argument=(program,))
                            
 # actual task to be run by scheduler
 # run progam and update queue so program runs again in a week
-def program_task(programs, letter):
+def program_task(program):
     if not running.is_set():
         running.set()
-        control = Thread(target=run_program, args=(programs, letter,
-                                                   running))
+        control = Thread(target=program.run, args=(running,))
         control.start()
     else:
-        print('unable to run scheduled program')
-    run_program(programs, letter, running)
-    schedule_stored_datetimes(programs)
+        print('unable to run program')
+    schedule_stored_datetimes()
                            
 # create schedule event that refreshes every five seconds
 # ensures new events added to queue will run
@@ -142,28 +178,27 @@ def return_queue():
     for event in schedule.queue:
         # exclude queue_check (to avoid confusing users)
         if event.priority == 1:
-            letter = event.argument[1]
+            letter = event.argument[0].letter
             time = event.time
             queue.append((letter, time))
     return queue
         
 if __name__ == '__main__':
-    prepare_relay()
+    sprinklers.prepare_relay()
     s = server_setup()
-    programs = load_programs()
     background = Thread(target=schedule.run)
     queue_check()
-    schedule_stored_datetimes(programs)
+    schedule_stored_datetimes()
     background.start()
     try:
         while True:
             c, data = info_recieve(s)
-            response = parse(data, programs)
+            response = parse(data)
             info_send (c, response)
     except KeyboardInterrupt:
         print('')
         pass
     clear_queue(True)
     s.close()
-    cleanup()
+    sprinklers.cleanup()
     

@@ -14,10 +14,9 @@ host = '192.168.1.3'
 port = 5000
 
 import socket, time, pickle
-from sprinklerdata import *
 
 # loop that runs indefintely in the foreground, accepting user input
-def input_loop(programs):
+def input_loop():
     stop = False
     while stop == False:
         command = input("Type 'help' for a list of commands. Type a command: ")
@@ -27,43 +26,50 @@ def input_loop(programs):
             display_queue()
         elif 'valves' in command:
             if command[-1] in 'ABC' and command[-2] == ' ':
-                display_times(programs, command[-1], 'valve')
-                modify_programs(programs, command[-1])
-                response = communicate('change')
+                letter = command[-1]
+                display_times(letter, 'valve')
+                new_times = modify_programs()
+                response = communicate(('valves', letter, new_times))
                 print(response)
+                display_times(letter, 'valve')
             else:
                 print('Proper syntax: valves [A,B,C]')
         elif 'display' in command:
             if command[-1] in 'ABC' and command[-2] == ' ':
-                display_times(programs, command[-1])
+                letter = command[-1]
+                display_times(letter)
             else:
                 print('Proper syntax: display [A,B,C]')
         elif 'schedule' in command:
             if command[-1] in 'ABC' and command[-2] == ' ':
-                display_times(programs, command[-1], 'run')
-                normalize_input_datetime(programs, command[-1])
-                response = communicate('change')
+                letter = command[-1]
+                display_times(letter, 'run')
+                new_time = input('Enter weekday and time for program to run: ')
+                split_input = tuple(new_time.split(' '))
+                response = communicate(('schedule', letter) + split_input)
                 print(response)
-                display_times(programs, command[-1], 'run')    
+                display_times(letter, 'run')   
             else:
                 print('Proper syntax: schedule [A,B,C]')
         elif command == 'stop':
             stop_sprinklers()
         elif 'clear' in command:
             if command[-1] in 'ABC' and command[-2] == ' ':
-                display_times(programs, command[-1], 'run')
-                clear_program(programs, command[-1])
-                response = communicate('change')
-                print(response)
+                letter = command[-1]
+                confirm = input('Type yes to clear schedule for program ' + 
+                                  letter + ': ')
+                if confirm == 'yes':
+                    response = communicate(('clear', letter))
+                    print(response)
             else:
                 print('Proper syntax: clear [A, B, C]')
         elif command == 'manual':
-            manual_mode(programs)
+            manual_mode()
         elif command == 'exit':
             break
             
 # allow user to specify single program or zone to run immediately
-def manual_mode(programs):
+def manual_mode():
     while True:
         command = input("Enter 'program [A,B,C]' or 'zone [1-5] [time]' "
                         "or 'done': ")
@@ -72,13 +78,10 @@ def manual_mode(programs):
         if 'program' in command:
             letter = command[1]
             if letter in 'ABC':
-                if programs[letter].valve_times == []:
-                    print('Valve times not set for program ' + letter + '.')
-                else:
-                    print('Instructing the server to run program ' + letter + 
-                           '...')    
-                    response = communicate('run program ' + letter)
-                    print(response)
+                print('Instructing the server to run program ' + letter + 
+                       '...')    
+                response = communicate(('run', 'program', letter))
+                print(response)
             else:
                 print('Proper syntax: program [A, B, C]')
         # allow for single zone to run
@@ -88,7 +91,7 @@ def manual_mode(programs):
             run_seconds = str(int(run_time) * 60)
             print('Instructing server to run zone ' + number + ' for ' 
                    + run_time + ' minutes...')
-            response = communicate('run zone ' + number + ' ' + run_seconds)
+            response = communicate(('run', 'zone', number, run_seconds))
             print(response)
         # allow user to cancel program if necessary
         if 'stop' in command:
@@ -102,6 +105,36 @@ def stop_sprinklers():
     print('Requesting that the server stop...')
     response = communicate('stop')
     print(response)
+    
+# display valve and/or run times for programs A, B, or C
+def display_times(letter, option='all'):
+    response = communicate(('display', letter))
+    valve_times = response['valve_times']
+    run_times = response['run_times']
+    # display valve times
+    if option == 'all' or option == 'valve':
+        number = 1
+        print('Valve times:')
+        if valve_times == []:
+            print('  No valve times')
+        for valve in valve_times:
+            print('  Valve ' + str(number) + ': ' + '{0:g}'.format(valve / 60))
+            number += 1
+    # display run times
+    if option == 'all' or option == 'run':
+        print('Run times:')
+        if run_times == []:
+            print('  No run times')
+        for run_time in run_times:
+            print('  ' + run_time)
+            
+# prompt user for input regarding valve times
+def modify_programs():
+    new_times = []
+    for zone in range(1, 6):
+        time = input('Enter a time (in minutes) for zone ' + str(zone) + ': ')
+        new_times.append(int(time) * 60)
+    return new_times
             
 # display list of events currently in server queue
 def display_queue():
@@ -127,7 +160,6 @@ def display_queue():
 
 # send message to server and recieve response
 def communicate(message):
-        message = message.split(' ')
         s = socket.socket()   
         s.connect((host, port))
         s.send(pickle.dumps(message))
@@ -151,5 +183,4 @@ def help_command():
     print(command_list)
     
 if __name__ == '__main__':
-    programs = load_programs()
-    input_loop(programs)
+    input_loop()

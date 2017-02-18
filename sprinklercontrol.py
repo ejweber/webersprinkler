@@ -33,9 +33,12 @@ def run_program(programs, letter, flag=None):
     for zone in range(0, total_zones):
         start_time = time.time()
         run_time = programs[letter].valve_times[zone]
-        while (time.time() - start_time) < run_time and (flag.is_set() or
-                                                          not flag):
-            GPIO.output(zones[zone], GPIO.LOW)
+        if flag:
+            while(time.time() - start_time) < run_time and flag.is_set():
+                GPIO.output(zones[zone], GPIO.LOW)
+        else:
+            while (time.time() - start_time) < run_time:
+                GPIO.output(zones[zone], GPIO.LOW)
         GPIO.output(zones[zone], GPIO.HIGH)
     GPIO.output(pump, GPIO.HIGH)
     if flag:
