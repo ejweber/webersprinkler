@@ -90,3 +90,6 @@ ENV/
 
 # nohup output
 nohup.out
+
+# saved webersprinkler programs
+saved_programs.p
