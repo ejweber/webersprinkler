@@ -65,6 +65,9 @@ def input_loop():
                 print('Proper syntax: clear [A, B, C]')
         elif command == 'manual':
             manual_mode()
+        elif command == 'shutdown':
+            print('Requesting that the server shut down...')
+            response = communicate('shutdown')
         elif command == 'exit':
             break
         # REMOVE FROM FINAL BUILD

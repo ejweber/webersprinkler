@@ -16,36 +16,26 @@
 # versions will output to a log file.
 
 # import necessary modules
-import pickle, time
-from sprinklersystem import SprinklerSystem, SprinklerProgram
-from threading import Thread, Event
-from sched import scheduler
-from tcpserver import TCPSprinklerServer
-
-# globally accesible schedule
-schedule = scheduler(time.time, time.sleep)
-
-# global sprinkler system
-sprinklers = SprinklerSystem()
-
-# global control thread identifier
-control = None
-            
-
-                           
-
+from sprinklersystem import SprinklerSystem
+from sprinklerschedule import SprinklerSchedule
+from tcpserver import TCPServer
+from threading import Thread
+import time
 
 if __name__ == '__main__':
-    sprinklers.prepare_relay()
-    Thread(target=TCPSprinklerServer, args=(sprinklers, running, control)).start()
-    time.sleep(5000)
-    '''
-    background = Thread(target=schedule.run)
-    queue_check()
-    schedule_stored_datetimes()
-    background.start()
-    clear_queue(True)
-    s.close()
-    sprinklers.cleanup()
-    '''
+    try:
+        sprinklers = SprinklerSystem()
+        background = SprinklerSchedule(sprinklers)
+        background_thread = Thread(target=background.run)
+        TCP_thread = Thread(target=TCPServer, args=(sprinklers, background))
+        background_thread.start()
+        TCP_thread.start()
+        background_thread.join()
+        TCP_thread.join()
+    except:
+        print('')
+        background.shutdown()
+        #sprinklers.cleanup()
+        
+    
     
