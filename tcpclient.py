@@ -67,6 +67,10 @@ def input_loop():
             manual_mode()
         elif command == 'exit':
             break
+        # REMOVE FROM FINAL BUILD
+        elif command == 'test':
+            response = communicate('test')
+            print(response)
             
 # allow user to specify single program or zone to run immediately
 def manual_mode():
