@@ -21,21 +21,23 @@ from sprinklerschedule import SprinklerSchedule
 from tcpserver import TCPServer
 from threading import Thread
 import time
+from tgapp import HTTPServer 
 
 if __name__ == '__main__':
     try:
         sprinklers = SprinklerSystem()
         background = SprinklerSchedule(sprinklers)
         background_thread = Thread(target=background.run)
-        TCP_thread = Thread(target=TCPServer, args=(sprinklers, background))
+        tcp_thread = Thread(target=TCPServer, args=(sprinklers, background))
+        http_thread = Thread(target=HTTPServer, args=(sprinklers, background))
         background_thread.start()
-        TCP_thread.start()
+        tcp_thread.start()
+        http_thread.start()
         background_thread.join()
-        TCP_thread.join()
+        tcp_thread.join()
     except:
         print('')
         background.shutdown()
-        #sprinklers.cleanup()
         
     
     

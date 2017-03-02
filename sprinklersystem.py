@@ -1,6 +1,7 @@
 import pickle
 import RPi.GPIO as GPIO
 import time
+import LCD1602 as LCD
 from datetime import datetime, timedelta
 
 # define SprinklerProgram class
@@ -17,12 +18,19 @@ class SprinklerProgram:
     # run program according to valve times
     def run(self, flag=None):   
         GPIO.output(self.pump, GPIO.LOW)
+        LCD.clear()
         for zone in range(0, self.total_zones):
             start_time = time.time()
             run_time = self.valve_times[zone]
+            remaining = run_time - (time.time() - start_time)
             if flag:
-                while(time.time() - start_time) < run_time and flag.is_set():
+                while remaining > 0 and flag.is_set():
                     GPIO.output(self.zones[zone], GPIO.LOW)
+                    LCD.write(0, 0, 'Program ' + self.letter + ':')
+                    remaining = run_time - (time.time() - start_time)
+                    m, s = divmod(remaining, 60)
+                    r_string = '%02d:%02d' % (m, s)
+                    LCD.write(0, 1, 'Zone ' + str(zone + 1) + ' ' + r_string)
             else:
                 while (time.time() - start_time) < run_time:
                     GPIO.output(self.zones[zone], GPIO.LOW)
@@ -89,10 +97,12 @@ class SprinklerProgram:
 # define SprinklerSystem class
 class SprinklerSystem:
     def __init__(self):
-        self.pump = 9
-        self.zones = [10, 22, 27, 17, 4, 3, 2]
+        self.pump = 26
+        self.zones = [19, 13, 6, 5, 21, 20, 16]
         self.total_zones = 5
         self.prepare_relay()
+        LCD.init(0x27, 1)
+        LCD.write(0, 0, 'webersprinkler')
         self.load()
         
     def load(self):

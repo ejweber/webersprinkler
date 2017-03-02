@@ -41,7 +41,8 @@ class SprinklerSchedule(scheduler):
     # set shutdown flag and fully clear queue so that background thread can stop
     def shutdown(self):
         self.running.clear()
-        self.control.join()
+        if self.control:
+            self.control.join()
         self.sprinklers.cleanup()
         self.shutdown_flag.set()
         self.clear_queue()

@@ -5,7 +5,6 @@ from threading import Thread
 class TCPServer(socket.socket):
     def __init__(self, sprinklers, background):
         socket.socket.__init__(self)
-        self.sprinklers = sprinklers
         self.host = '192.168.1.3'
         self.port = 5000
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
