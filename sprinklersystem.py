@@ -38,6 +38,9 @@ class SprinklerProgram:
         GPIO.output(self.pump, GPIO.HIGH)
         if flag:
             flag.clear()
+        LCD.clear()
+        LCD.write(0, 0, 'webersprinkler')
+        LCD.write(0, 1, 'Ready...')
     
     # insert new run_time into sorted list of run_times
     def store_time(self, datetime_tuple):
@@ -102,7 +105,7 @@ class SprinklerSystem:
         self.total_zones = 5
         self.prepare_relay()
         LCD.init(0x27, 1)
-        LCD.write(0, 0, 'webersprinkler')
+        self.standard_display()
         self.load()
         
     def load(self):
@@ -161,11 +164,18 @@ class SprinklerSystem:
             
     # run zone manually for specified amount of time
     def run_zone(self, zone, run_time, flag=None):
+        LCD.clear()
         start_time = time.time()
+        remaining = run_time - (time.time() - start_time)
         if flag:
-            while(time.time() - start_time) < run_time and flag.is_set():
+            while remaining > 0 and flag.is_set():
                 GPIO.output(self.pump, GPIO.LOW)
                 GPIO.output(self.zones[zone], GPIO.LOW)
+                LCD.write(0, 0, 'Individual zone:')
+                remaining = run_time - (time.time() - start_time)
+                m, s = divmod(remaining, 60)
+                r_string = '%02d:%02d' % (m, s)
+                LCD.write(0, 1, 'Zone ' + str(zone) + ' ' + r_string)
         if not flag:
             while (time.time() - start_time) < run_time:
                 GPIO.output(self.pump, GPIO.LOW)
@@ -174,6 +184,15 @@ class SprinklerSystem:
         GPIO.output(self.zones[zone], GPIO.HIGH)
         if flag:
             flag.clear()
+        LCD.clear()
+        LCD.write(0, 0, 'webersprinkler')
+        LCD.write(0, 1, 'Ready...')
+            
+    # standard LCD display when no programs are running
+    def standard_display(self):
+        LCD.clear()
+        LCD.write(0, 0, 'webersprinkler')
+        LCD.write(0, 1, 'Ready...')
 
 if __name__ == '__main__':
     sprinklers = SprinklerSystem()

@@ -21,7 +21,6 @@ class TCPServer(socket.socket):
         print(str(addr) + ' sent '+ str(data) + ' to the TCP server.')
         return c, data
   
-        
     # send response string to client
     def info_send(self, c, response):
         c.send(pickle.dumps(response))
@@ -102,6 +101,7 @@ class TCPServer(socket.socket):
             sprinklers.programs[letter].run_times = []
             return 'The server has made the change.'
         if 'shutdown' in data:
+            print('here 4')
             background.shutdown()
             return 'The server is shutting down.'
         # TAKE OUT OF FINAL BUILD!

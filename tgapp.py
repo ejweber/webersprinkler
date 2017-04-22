@@ -48,7 +48,7 @@ class RootController(TGController):
                         'running.')
             return dict(response=r_string)
 
-def HTTPServer(sprinklers, background):
+def HTTPServer(sprinklers, background, shutdown_request):
     root = RootController(sprinklers, background)
     config = AppConfig(minimal=True, root_controller=root)
     config.renderers = ['kajiki']
@@ -56,4 +56,7 @@ def HTTPServer(sprinklers, background):
     application = config.make_wsgi_app()
     print('Serving on port 5001...')
     httpd = make_server('', 5001, application)
-    httpd.serve_forever()
+    print(shutdown_request.is_set())
+    while not shutdown_request.is_set():
+        httpd.handle_request()
+    print('here')
