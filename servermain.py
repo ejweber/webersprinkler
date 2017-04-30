@@ -21,11 +21,10 @@ from sprinklerschedule import SprinklerSchedule
 from tcpserver import TCPServer
 from threading import Thread
 import time
-from tgapp import HTTPServer
-from urllib.request import urlopen 
+from httpserver import HTTPServer
+from urllib.request import urlopen
 
 if __name__ == '__main__':
-    try:
         sprinklers = SprinklerSystem()
         background = SprinklerSchedule(sprinklers)
         background_thread = Thread(target=background.run)
@@ -35,13 +34,16 @@ if __name__ == '__main__':
         tcp_thread.start()
         http_thread.start()
         while not background.shutdown_flag.is_set():
-          pass
-        urlopen('http://68.102.39.123:5001/shutdown')
+            pass
+        
+        # send final request to HTTPServer to unblock thread
+        try:
+            urlopen('http://68.102.39.123:5001/shutdown')
+        except:
+            pass
+        
         background_thread.join()
         tcp_thread.join()
-    except:
-        print('')
-        background.shutdown()
         
     
     

@@ -44,12 +44,16 @@ class RootController(TGController):
                 r_string = 'The server has agreed to stop the controller.'
                 return dict(response=r_string)
         else:
-            r_string = ('The server reports that the controller was not ' +
+            r_string = ('The server reports that the controller was not '
                         'running.')
             return dict(response=r_string)
         
+    @expose('index.xhtml')
     def shutdown(self):
         self.background.shutdown()
+        r_string = ('The server is shutting down. This page will become '
+                    'unavailable.')
+        return dict(response=r_string)
 
 def HTTPServer(sprinklers, background):
     root = RootController(sprinklers, background)
@@ -61,4 +65,3 @@ def HTTPServer(sprinklers, background):
     httpd = make_server('', 5001, application)
     while not background.shutdown_flag.is_set():
         httpd.handle_request()
-    print('here')

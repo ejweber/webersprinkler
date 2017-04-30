@@ -1,15 +1,16 @@
 import pickle, socket
 from threading import Thread
 
+host = '192.168.1.3'
+port = 5000
+
 # create server class with appropriate functions inherited from socket.socket
 class TCPServer(socket.socket):
     def __init__(self, sprinklers, background):
         socket.socket.__init__(self)
-        self.host = '192.168.1.3'
-        self.port = 5000
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.settimeout(5)
-        self.bind((self.host, self.port))
+        self.bind((host, port))
         print('The TCP server is set up and listening for instructions...')
         self.server_loop(sprinklers, background)
         
@@ -101,7 +102,6 @@ class TCPServer(socket.socket):
             sprinklers.programs[letter].run_times = []
             return 'The server has made the change.'
         if 'shutdown' in data:
-            print('here 4')
             background.shutdown()
             return 'The server is shutting down.'
         # TAKE OUT OF FINAL BUILD!
@@ -116,7 +116,7 @@ class TCPServer(socket.socket):
                 response = self.parse(data, sprinklers, background)
                 self.info_send (c, response)
             except socket.timeout:
-                pass
+                pass                      
             
 if __name__ == '__main__':
     tcp_sprinkler_server = TCPSprinklerServer()
