@@ -1,0 +1,9 @@
+Default renderer not in renders, automatically switching to kajiki
+app_globals not provided and lib.app_globals.Globals is not available.
+192.168.1.1 - - [09/May/2017 21:00:02] "GET /shutdown HTTP/1.1" 200 810
+The TCP server is set up and listening for instructions...
+Serving on port 5001...
+('192.168.1.41', 60645) sent ('run', 'program', 'A') to the TCP server.
+('192.168.1.41', 60646) sent stop to the TCP server.
+('192.168.1.41', 60647) sent shutdown to the TCP server.
+Successful shutdown at Tue May  9 21:00:03 2017

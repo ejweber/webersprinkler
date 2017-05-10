@@ -24,6 +24,8 @@ import time
 from httpserver import HTTPServer
 from urllib.request import urlopen
 
+server_url = 'http://68.102.62.242:5001'
+
 if __name__ == '__main__':
         sprinklers = SprinklerSystem()
         background = SprinklerSchedule(sprinklers)
@@ -38,12 +40,13 @@ if __name__ == '__main__':
         
         # send final request to HTTPServer to unblock thread
         try:
-            urlopen('http://68.102.39.123:5001/shutdown')
+            urlopen(server_url + '/shutdown')
         except:
             pass
         
         background_thread.join()
         tcp_thread.join()
+        print('Successful shutdown: ' + time.ctime())
         
     
     
