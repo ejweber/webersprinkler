@@ -29,8 +29,8 @@ class RootController(TGController):
                         'program ' + letter + '.')
             return dict(response=r_string)
         background.running.set()
-        background.control = Thread(target=sprinklers.programs[letter].run, 
-                         args=(background.running,))
+        background.control = Thread(target=sprinklers.run, 
+                         args=(letter, background.running,))
         background.control.start()
         r_string = (r_string + 'The server has agreed to run program ' +
                     letter + '.')

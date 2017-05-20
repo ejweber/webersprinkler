@@ -24,7 +24,7 @@ import time
 from httpserver import HTTPServer
 from urllib.request import urlopen
 
-server_url = 'http://68.102.62.242:5001'
+server_url = 'http://68.102.42.179:5001'
 
 if __name__ == '__main__':
         sprinklers = SprinklerSystem()

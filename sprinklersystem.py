@@ -14,33 +14,6 @@ class SprinklerProgram:
         self.pump = pump
         self.zones = zones
         self.total_zones = total_zones
-        
-    # run program according to valve times
-    def run(self, flag=None):   
-        GPIO.output(self.pump, GPIO.LOW)
-        LCD.clear()
-        for zone in range(0, self.total_zones):
-            start_time = time.time()
-            run_time = self.valve_times[zone]
-            remaining = run_time - (time.time() - start_time)
-            if flag:
-                while remaining > 0 and flag.is_set():
-                    GPIO.output(self.zones[zone], GPIO.LOW)
-                    LCD.write(0, 0, 'Program ' + self.letter + ':')
-                    remaining = run_time - (time.time() - start_time)
-                    m, s = divmod(remaining, 60)
-                    r_string = '%02d:%02d' % (m, s)
-                    LCD.write(0, 1, 'Zone ' + str(zone + 1) + ' ' + r_string)
-            else:
-                while (time.time() - start_time) < run_time:
-                    GPIO.output(self.zones[zone], GPIO.LOW)
-            GPIO.output(self.zones[zone], GPIO.HIGH)
-        GPIO.output(self.pump, GPIO.HIGH)
-        if flag:
-            flag.clear()
-        LCD.clear()
-        LCD.write(0, 0, 'webersprinkler')
-        LCD.write(0, 1, 'Ready...')
     
     # insert new run_time into sorted list of run_times
     def store_time(self, datetime_tuple):
@@ -105,7 +78,9 @@ class SprinklerSystem:
         self.total_zones = 5
         self.prepare_relay()
         LCD.init(0x27, 1)
-        self.standard_display()
+        self.default_status = ['webersprinker', 'Ready...']
+        self.status = self.default_status
+        self.LCD_display(self.status)
         self.load()
         
     def load(self):
@@ -162,6 +137,33 @@ class SprinklerSystem:
             time.sleep(sleep_time)
             GPIO.output(pump_zone, GPIO.HIGH)
             
+    # run program according to valve times
+    def run(self, letter, flag=None):   
+        program = self.programs[letter]
+        GPIO.output(self.pump, GPIO.LOW)
+        LCD.clear()
+        for zone in range(0, self.total_zones):
+            start_time = time.time()
+            run_time = program.valve_times[zone]
+            remaining = run_time - (time.time() - start_time)
+            if flag:
+                while remaining > 0 and flag.is_set():
+                    GPIO.output(self.zones[zone], GPIO.LOW)
+                    self.status[0] = 'Program ' + program.letter + ':'
+                    remaining = run_time - (time.time() - start_time)
+                    m, s = divmod(remaining, 60)
+                    r_string = '%02d:%02d' % (m, s)
+                    self.status[1] = 'Zone ' + str(zone + 1) + ' ' + r_string
+                    self.LCD_display(self.status)
+            else:
+                while (time.time() - start_time) < run_time:
+                    GPIO.output(self.zones[zone], GPIO.LOW)
+            GPIO.output(self.zones[zone], GPIO.HIGH)
+        GPIO.output(self.pump, GPIO.HIGH)
+        if flag:
+            flag.clear()
+        self.LCD_display(self.default_status)
+            
     # run zone manually for specified amount of time
     def run_zone(self, zone, run_time, flag=None):
         LCD.clear()
@@ -171,11 +173,12 @@ class SprinklerSystem:
             while remaining > 0 and flag.is_set():
                 GPIO.output(self.pump, GPIO.LOW)
                 GPIO.output(self.zones[zone], GPIO.LOW)
-                LCD.write(0, 0, 'Individual zone:')
+                self.status[0] = 'Individual zone:'
                 remaining = run_time - (time.time() - start_time)
                 m, s = divmod(remaining, 60)
                 r_string = '%02d:%02d' % (m, s)
-                LCD.write(0, 1, 'Zone ' + str(zone) + ' ' + r_string)
+                self.status[1] = 'Zone ' + str(zone) + ' ' + r_string
+                self.LCD_display(self.status)
         if not flag:
             while (time.time() - start_time) < run_time:
                 GPIO.output(self.pump, GPIO.LOW)
@@ -184,15 +187,14 @@ class SprinklerSystem:
         GPIO.output(self.zones[zone], GPIO.HIGH)
         if flag:
             flag.clear()
-        LCD.clear()
-        LCD.write(0, 0, 'webersprinkler')
-        LCD.write(0, 1, 'Ready...')
+        self.LCD_display(self.default_status)
             
     # standard LCD display when no programs are running
-    def standard_display(self):
+    def LCD_display(self, message):
+        print('FIND A FIX FOR THE LCD CLEARING BUG')
         LCD.clear()
-        LCD.write(0, 0, 'webersprinkler')
-        LCD.write(0, 1, 'Ready...')
+        LCD.write(0, 0, message[0])
+        LCD.write(0, 1, message[1])
 
 if __name__ == '__main__':
     sprinklers = SprinklerSystem()

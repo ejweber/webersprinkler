@@ -44,8 +44,8 @@ class TCPServer(socket.socket):
                                 'program ' + letter + '.')
                     return r_string
                 background.running.set()
-                background.control = Thread(target=sprinklers.programs[letter].run, 
-                                 args=(background.running,))
+                background.control = Thread(target=sprinklers.run, 
+                                 args=(letter, background.running,))
                 background.control.start()
                 r_string = (r_string + 'The server has agreed to run program ' +
                             letter + '.')
@@ -104,9 +104,6 @@ class TCPServer(socket.socket):
         if 'shutdown' in data:
             background.shutdown()
             return 'The server is shutting down.'
-        # TAKE OUT OF FINAL BUILD!
-        if 'test' in data:
-            return('The TCP server is capable of a response.')
             
     # listen for and respond to requests indefinitely
     def server_loop(self, sprinklers, background):
@@ -119,4 +116,8 @@ class TCPServer(socket.socket):
                 pass                      
             
 if __name__ == '__main__':
-    tcp_sprinkler_server = TCPSprinklerServer()
+    from sprinklersystem import SprinklerSystem
+    from sprinklerschedule import SprinklerSchedule
+    sprinklers = SprinklerSystem()
+    background = SprinklerSchedule(sprinklers)
+    tcp_sprinkler_server = TCPServer(sprinklers, background)
