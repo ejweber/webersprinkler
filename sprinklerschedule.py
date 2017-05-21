@@ -43,7 +43,7 @@ class SprinklerSchedule(scheduler):
         self.running.clear()
         if self.control:
             self.control.join()
-        self.sprinklers.cleanup()
+        self.sprinklers.shutdown()
         self.shutdown_flag.set()
         self.clear_queue()
     

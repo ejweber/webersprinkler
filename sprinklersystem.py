@@ -78,8 +78,8 @@ class SprinklerSystem:
         self.total_zones = 5
         self.prepare_relay()
         LCD.init(0x27, 1)
-        self.default_status = ['webersprinker', 'Ready...']
-        self.status = self.default_status
+        self.default_status = ('webersprinker', 'Ready...')
+        self.status = list(self.default_status)
         self.LCD_display(self.status)
         self.load()
         
@@ -124,9 +124,11 @@ class SprinklerSystem:
         chan_list = self.zones + [self.pump]
         GPIO.output(chan_list, GPIO.HIGH)
 
-    # cleanup GPIO for program exit
-    def cleanup(self):
+    # cleanup GPIO and disply shutdown message for program exit
+    def shutdown(self):
         GPIO.cleanup()
+        self.status = ['webersprinkler', 'Shutdown...']
+        self.LCD_display(self.status)
         
     # test relay for effective operation
     def relay_test(self):
@@ -141,7 +143,7 @@ class SprinklerSystem:
     def run(self, letter, flag=None):   
         program = self.programs[letter]
         GPIO.output(self.pump, GPIO.LOW)
-        LCD.clear()
+        self.status[0] = 'Program ' + program.letter + ':'
         for zone in range(0, self.total_zones):
             start_time = time.time()
             run_time = program.valve_times[zone]
@@ -149,7 +151,6 @@ class SprinklerSystem:
             if flag:
                 while remaining > 0 and flag.is_set():
                     GPIO.output(self.zones[zone], GPIO.LOW)
-                    self.status[0] = 'Program ' + program.letter + ':'
                     remaining = run_time - (time.time() - start_time)
                     m, s = divmod(remaining, 60)
                     r_string = '%02d:%02d' % (m, s)
@@ -162,18 +163,19 @@ class SprinklerSystem:
         GPIO.output(self.pump, GPIO.HIGH)
         if flag:
             flag.clear()
-        self.LCD_display(self.default_status)
+        print(self.default_status)
+        self.status = list(self.default_status)
+        self.LCD_display(self.status)
             
     # run zone manually for specified amount of time
     def run_zone(self, zone, run_time, flag=None):
-        LCD.clear()
         start_time = time.time()
         remaining = run_time - (time.time() - start_time)
+        self.status[0] = 'Individual zone:'
         if flag:
             while remaining > 0 and flag.is_set():
                 GPIO.output(self.pump, GPIO.LOW)
                 GPIO.output(self.zones[zone], GPIO.LOW)
-                self.status[0] = 'Individual zone:'
                 remaining = run_time - (time.time() - start_time)
                 m, s = divmod(remaining, 60)
                 r_string = '%02d:%02d' % (m, s)
@@ -187,14 +189,18 @@ class SprinklerSystem:
         GPIO.output(self.zones[zone], GPIO.HIGH)
         if flag:
             flag.clear()
-        self.LCD_display(self.default_status)
+        self.status = list(self.default_status)
+        self.LCD_display(self.status, clear=True)
             
     # standard LCD display when no programs are running
     def LCD_display(self, message):
-        print('FIND A FIX FOR THE LCD CLEARING BUG')
-        LCD.clear()
-        LCD.write(0, 0, message[0])
-        LCD.write(0, 1, message[1])
+        padded_message = []
+        for line in message:
+            for x in range(16 - len(line)):
+                line = line + ' '
+            padded_message.append(line)
+        LCD.write(0, 0, padded_message[0])
+        LCD.write(0, 1, padded_message[1])
 
 if __name__ == '__main__':
     sprinklers = SprinklerSystem()
