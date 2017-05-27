@@ -11,7 +11,7 @@ class RootController(TGController):
     
     @expose('index.xhtml')
     def index(self):
-        return dict(response='The server is ready for input.')
+        return self.index_dict('The server is ready for input.')
         
     @expose('index.xhtml')
     def run(self, letter):
@@ -34,7 +34,7 @@ class RootController(TGController):
         background.control.start()
         r_string = (r_string + 'The server has agreed to run program ' +
                     letter + '.')
-        return dict(response=r_string)
+        return self.index_dict(r_string)
         
     @expose('index.xhtml')
     def stop(self):    
@@ -42,18 +42,23 @@ class RootController(TGController):
         if background.running.is_set():
                 background.running.clear()
                 r_string = 'The server has agreed to stop the controller.'
-                return dict(response=r_string)
         else:
             r_string = ('The server reports that the controller was not '
                         'running.')
-            return dict(response=r_string)
+        return self.index_dict(r_string)
         
     @expose('index.xhtml')
     def shutdown(self):
         self.background.shutdown()
         r_string = ('The server is shutting down. This page will become '
                     'unavailable.')
-        return dict(response=r_string)
+        return self.index_dict(r_string)
+    
+    def index_dict(self, r_string):
+        xhtml_data = dict(response=r_string,
+                          status0=self.sprinklers.status[0],
+                          status1=self.sprinklers.status[1])
+        return xhtml_data
 
 def HTTPServer(sprinklers, background):
     root = RootController(sprinklers, background)

@@ -1,5 +1,11 @@
 <html>
+    <style>
+        .cell {float: left;
+               padding: 0px 10px 0px 10px}
+    </style>
+    
     <title>Weber Sprinkler</title>
+    
     <body>
         <h1>Weber Sprinkler</h1>
         <form action="/run">
@@ -22,5 +28,16 @@
         </form>
         <br />
         ${response}
+        <br /><br />
+        <div class="cell" style="padding-left: 0px">System status:</div>
+        <div class="cell">
+                ${status0}<br />
+                ${status1}
+        </div>
+        <div class="cell">
+            <form action="/index">
+            <button type="submit">Refresh</button>
+            </form>
+        </div>
     </body>
 </html>
