@@ -74,7 +74,7 @@ class SprinklerProgram:
 class SprinklerSystem:
     def __init__(self):
         self.pump = 26
-        self.zones = [19, 13, 6, 5, 21, 20, 16]
+        self.zones = [16, 20, 21, 5,  6, 13, 19, 26]
         self.total_zones = 5
         self.prepare_relay()
         LCD.init(0x27, 1)
