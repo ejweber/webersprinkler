@@ -1,2 +1,0 @@
-Default renderer not in renders, automatically switching to kajiki
-app_globals not provided and lib.app_globals.Globals is not available.

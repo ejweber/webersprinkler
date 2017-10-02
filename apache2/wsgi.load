@@ -1,0 +1,8 @@
+# To enable this module on Raspbian:
+# Copy it to "/etc/apache2/mods--available"
+# Run "a2enmod sprinkler"
+# See readme.txt for more information
+
+LoadModule wsgi_module "/home/pi/sprinklerenv/lib/python3.4/site-packages/mod_wsgi/server/mod_wsgi-py34.cpython-34m.so"
+WSGIPythonHome "/home/pi/sprinklerenv"
+

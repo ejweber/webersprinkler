@@ -1,0 +1,14 @@
+{
+  "A": {
+    "name": "Program A",
+    "description": "Regular summer watering",
+    "recurring": true,
+    "run_times": [
+        "Monday 5:30",
+        "Wednesday 5:30",
+        "Friday 5:30",
+        "Wednesday 7:24"
+    ],
+    "zone_times": [15, 20, 15, 15, 20]
+  }
+}
