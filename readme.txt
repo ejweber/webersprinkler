@@ -12,7 +12,7 @@ Design Diagram
                            | JSON from /API                            | JSON from /API via AJAX
                            |                                           |
                            |           +-------------------+           |   
-                           +_----------| Apache Web Server |-----------+
+                           +-----------| Apache Web Server |-----------+
                                        +---+-----------+---+
                                            |           |
                                 +----------+---+   +---+------------+

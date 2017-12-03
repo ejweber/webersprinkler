@@ -238,10 +238,3 @@ class API(object):
             del self.programs[program_id]
         else:
             self.programs[program_id]['run_times'].remove(run_time)
-            
-
-
-if __name__ == '__main__':
-    log.basicConfig(level=log.DEBUG,
-                    format='%(asctime)s %(levelname)s: %(message)s')
-    api = API()
