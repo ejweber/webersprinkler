@@ -40,7 +40,7 @@ class API(object):
         self.status = {
             'program': None,
             'zone': None,
-            'time': 0,
+            'time': None,
             'next': {}
         }
         self.sprinkler_thread = None

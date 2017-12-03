@@ -82,7 +82,7 @@ class Sprinklers(Timer):
             GPIO.output(self.zones[zone], GPIO.HIGH)
 
     def cleanup(self):
-        self.status['time'] = 0
+        self.status['time'] = None
         self.status['program'] = None
         self.status['zone'] = None
         # CHANGE LCD DISPLAY HERE
