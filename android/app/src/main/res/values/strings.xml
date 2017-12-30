@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Weber Sprinkler</string>
+    <string name="title_activity_manual">ManualActivity</string>
+    <string-array name="zones_array">
+        <item>Zone 1</item>
+        <item>Zone 2</item>
+        <item>Zone 3</item>
+        <item>Zone 4</item>
+        <item>Zone 5</item>
+    </string-array>
+    <string name="no_programs">No Programs</string>
+    <string name="run">Run</string>
+    <string name="stop">Stop</string>
+    <string name="refresh">Refresh</string>
 </resources>
