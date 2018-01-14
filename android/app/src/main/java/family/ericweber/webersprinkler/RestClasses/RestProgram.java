@@ -1,4 +1,4 @@
-package family.ericweber.webersprinkler.rest_classes;
+package family.ericweber.webersprinkler.RestClasses;
 
 public class RestProgram {
 
