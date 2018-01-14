@@ -1,5 +1,6 @@
 import bottle, api_functions
 import logging as log
+from json import dumps # needed to return a top level JSON array
 
 api_functions.set_up_logs()
 api = api_functions.API()
@@ -9,10 +10,12 @@ api = api_functions.API()
 @bottle.get('/programs/<program_id>')
 def get_programs(program_id=None):
     if program_id is None:
-        return api.programs
+        # must set content type manually and use dumps for top level array
+        bottle.response.content_type = 'application/json'
+        return dumps(api.programs)
     else:
         try:
-            return api.programs[program_id]
+            return api.get_program_by_id(program_id)
         except KeyError:
             log.warning('Attempted to retrieve unknown program: ' + program_id)
             bottle.abort(404, 'The specified program does not exist.')
@@ -22,16 +25,18 @@ def get_programs(program_id=None):
 @bottle.post('/programs/<program_id>')
 def add_or_update(program_id=None):
     request = bottle.request
+    log.debug('Content-Type: ' + request.get_header('Content-Type'))
+    log.debug('Data: ' + str(request.json))
     if request.headers.get('Content-Type') != 'application/json':
         log.warning('Attempted POST without application/json header')
         bottle.abort(400, 'The application/json header is required.')
-    if program_id not in api.programs and program_id is not None:
+    if not api.get_program_by_id(program_id) and program_id is not None:
         log.warning('Attempted to update unknown program: ' + program_id)
         bottle.abort(404, 'The specified program does not exist.')
     try:
         if api.add_or_update(request.json, program_id) is True:
             if program_id is not None:
-                return api.programs[program_id]
+                return api.get_program_by_id(program_id)
             else:
                 return api.programs
         else:
@@ -74,7 +79,7 @@ def delete(program_id=None, run_day=None, run_hour=None, run_minute=None):
 @bottle.post('/run/program/<program_id>')
 def run_program(program_id=None):
     try:
-        api.run_program(program_id=program_id)
+        api.run_program(program = api.get_program_by_id(program_id))
         return api.status
     except KeyError:
         log.warning('Attempted to run unknown program: ' + program_id)

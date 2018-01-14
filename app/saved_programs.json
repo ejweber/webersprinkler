@@ -1,6 +1,7 @@
-{
-  "A": {
+[
+  {
     "name": "Program A",
+    "id": "a7g4RT21",
     "description": "Regular summer watering",
     "recurring": true,
     "run_times": [
@@ -11,4 +12,4 @@
     ],
     "zone_times": [15, 20, 15, 15, 20]
   }
-}
+]

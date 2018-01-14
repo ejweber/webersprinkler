@@ -1,4 +1,4 @@
-import json, time, logging.handlers, os
+import json, time, logging.handlers, os, string, random
 import logging as log
 from threading import Event
 from sprinkler_system import Sprinklers
@@ -59,11 +59,9 @@ class API(object):
             programs = {}
         return programs
 
-    def run_program(self, time_until=0, program_id=None, program=None):
+    def run_program(self, time_until=0, program=None):
         log.debug('api.run_program() called')
         self.stop_sprinklers()
-        if program_id:
-            program = self.programs[program_id]
         log.debug(program)
         self.sprinkler_thread = Sprinklers(time_until, program, self.status,
                                            self.stop)
@@ -134,12 +132,13 @@ class API(object):
         next_program = None
         list_time = []
         for program in self.programs:
-            for run_time in self.programs[program]['run_times']:
+            log.debug(program)
+            for run_time in program['run_times']:
                 parsed_time = self.parse_run_time(run_time)
                 # only schedule program as next if it occurs later than now
                 if next_program is None or (parsed_time < next_program[1]
                                             and parsed_time != 0):
-                    next_program = (self.programs[program], parsed_time)
+                    next_program = (program, parsed_time)
                     list_time = run_time
         log.debug ('Next program: {}'.format(next_program))
         self.status['next'] = {'name': next_program[0]['name'],
@@ -154,17 +153,17 @@ class API(object):
 
     def add_or_update(self, request, program_id):
         if program_id is None:
-            program_id = self.choose_next_letter()
+            program_id = self.get_new_id()
             temp_program = {'name': 'Program ' + program_id,
                             'run_times': [],
                             'zone_times': [0, 0, 0, 0, 0],
                             'description': '',
                             'recurring': True}
         else:
-            temp_program = self.programs[program_id]
+            temp_program = self.get_program_by_id(program_id)
         for key, value in request.items():
             if key == 'run_times':
-                temp_program['run_times'] += value
+                temp_program['run_times'] = value
                 # subtract next run time from Monday 0:00
                 # the smallest positive difference is first in the week to run
                 temp_program['run_times'].sort(key=lambda x: 
@@ -173,7 +172,7 @@ class API(object):
             else:
                 temp_program[key] = value
         if self.validate_program(temp_program) is True:
-            self.programs[program_id] = temp_program
+            self.add_or_replace(temp_program)
             return True
         else:
             return False
@@ -187,8 +186,8 @@ class API(object):
     @staticmethod
     def validate_program(temp_program):
         log.debug('temp_program: {}'.format(temp_program))
+        log.debug(temp_program)
         for key, value in temp_program.items():
-            log.debug(key, value)
             if key == 'recurring':
                 if value is not True and value is not False:
                     log.debug('Invalid recurring state')
@@ -218,15 +217,22 @@ class API(object):
                         log.debug('No comma in run time')
                         return False
                     split = split[1].split(':')
-                    if not isinstance(split[0], int) or not isinstance(split[1],
-                                                                       int):
+                    if not split[0].isdigit() or not split[1].isdigit():
                         log.debug('Invalid run time')
                         return False
+                break
+            if key == 'id':
+                if not value.isalnum():
+                    log.debug('Invalid key characters')
+                    return False
+                if len(value) is not 8:
+                    log.debug('Incorrect key length')
+                    return False
                 break
             if key == 'description' or key == 'name':
                 break
             else:
-                log.debug('Bad key')
+                log.debug('Bad key: ' + key)
                 return False
         return True
     
@@ -238,3 +244,25 @@ class API(object):
             del self.programs[program_id]
         else:
             self.programs[program_id]['run_times'].remove(run_time)
+
+    def get_program_by_id(self, program_id):
+        for program in self.programs:
+            if program['id'] == program_id:
+                return program
+        return None
+
+    def add_or_replace(self, new_program):
+        for old_program in self.programs:
+            if old_program['id'] == new_program['id']:
+                old_program = new_program
+                return
+        self.programs.append(new_program)
+
+    @staticmethod
+    def get_new_id():
+        char_number = 8
+        all_char = string.ascii_letters + string.digits
+        new_id = ''
+        for x in range(0, char_number):
+            new_id += all_char(random.randint)
+        return new_id
