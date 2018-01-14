@@ -1,29 +1,47 @@
-package family.ericweber.webersprinkler.library;
+package family.ericweber.webersprinkler.Library;
+
+import android.util.Log;
 
 import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class Rest<Input, Output> {
-
+public class Rest<Output, Input> {
     private URL endpoint;
+    private Output outputObject;
     private Class<Output> outputClass;
+    private Class<Input> inputClass;
 
-    public Rest(String endpoint, Class<Output> cls) {
+    public Rest(String endpoint, Class<Input> inputClass) {
         try {
             this.endpoint = new URL("http", "ericweber.family", 5002, endpoint);
         }
         catch (MalformedURLException e) {
             throw new Error("malformed URL exception");
         }
-        outputClass = cls;
+        this.inputClass = inputClass;
     }
 
-    public Output Get() {
+    public Rest(String endpoint, Output outputObject, Class<Output> outputClass, Class<Input> inputClass) {
+        try {
+            this.endpoint = new URL("http", "ericweber.family", 5002, endpoint);
+        }
+        catch (MalformedURLException e) {
+            throw new Error("malformed URL exception");
+        }
+        this.outputObject = outputObject;
+        this.outputClass = outputClass;
+        this.inputClass = inputClass;
+    }
+
+
+    public Input Get() {
         // the () typecasts a URLConnection to an HttpURLConnection
         HttpURLConnection connection;
         InputStreamReader stream;
@@ -34,25 +52,38 @@ public class Rest<Input, Output> {
         catch (IOException e) {
             throw new Error("IO exception!");
         }
-        Output outputObject = (new Gson()).fromJson(stream, outputClass);
+        Input inputObject = (new Gson()).fromJson(stream, inputClass);
         connection.disconnect();
-        return outputObject;
+        return inputObject;
     }
 
-    public Output Post() {
+    public Input Post() {
         // the () typecasts a URLConnection to an HttpURLConnection
         HttpURLConnection connection;
-        InputStreamReader stream;
+        InputStreamReader inputStream;
+        OutputStreamWriter outputStream;
+        Input inputObject = null;
         try {
             connection = (HttpURLConnection) endpoint.openConnection();
             connection.setDoOutput(true);
-            stream = new InputStreamReader(connection.getInputStream());
+            connection.setRequestProperty("Content-Type", "application/json");
+            String outputString = (new Gson()).toJson(outputObject, outputClass);
+            Log.d("outputString", outputString);
+            outputStream = new OutputStreamWriter(connection.getOutputStream());
+            outputStream.write(outputString);
+            outputStream.flush();
+            int responseCode = connection.getResponseCode();
+            Log.d("Response code", String.valueOf(responseCode));
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                inputStream = new InputStreamReader(connection.getInputStream());
+                Log.d("Request", connection.toString());
+                inputObject = (new Gson()).fromJson(inputStream, inputClass);
+            }
         }
         catch (IOException e) {
             throw new Error("IO exception!");
         }
-        Output outputObject = (new Gson()).fromJson(stream, outputClass);
         connection.disconnect();
-        return outputObject;
+        return inputObject;
     }
 }
