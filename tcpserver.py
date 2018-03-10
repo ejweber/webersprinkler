@@ -51,7 +51,7 @@ class TCPServer(socket.socket):
                             letter + '.')
                 return r_string
             if 'zone' in data:
-                zone = int(data[2])
+                zone = int(data[2]) - 1
                 run_time = int(data[3])
                 run_minutes = str(int(run_time / 60))
                 if not background.running.is_set():
