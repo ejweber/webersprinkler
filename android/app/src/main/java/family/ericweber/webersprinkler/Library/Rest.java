@@ -12,6 +12,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class Rest<Output, Input> {
+    static int port = 5001;
     private URL endpoint;
     private Output outputObject;
     private Class<Output> outputClass;
@@ -19,17 +20,20 @@ public class Rest<Output, Input> {
 
     public Rest(String endpoint, Class<Input> inputClass) {
         try {
-            this.endpoint = new URL("http", "ericweber.family", 5002, endpoint);
+            this.endpoint = new URL("http", "ericweber.family", port, endpoint);
         }
         catch (MalformedURLException e) {
             throw new Error("malformed URL exception");
         }
+        this.outputObject = null;
+        this.outputClass = null;
         this.inputClass = inputClass;
+        Log.d("endpoint", this.endpoint.toString());
     }
 
     public Rest(String endpoint, Output outputObject, Class<Output> outputClass, Class<Input> inputClass) {
         try {
-            this.endpoint = new URL("http", "ericweber.family", 5002, endpoint);
+            this.endpoint = new URL("http", "ericweber.family", port, endpoint);
         }
         catch (MalformedURLException e) {
             throw new Error("malformed URL exception");
@@ -61,23 +65,25 @@ public class Rest<Output, Input> {
         HttpURLConnection connection;
         InputStreamReader inputStream;
         OutputStreamWriter outputStream;
-        Input inputObject = null;
+        Input inputObject;
         try {
             connection = (HttpURLConnection) endpoint.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/json");
-            String outputString = (new Gson()).toJson(outputObject, outputClass);
-            Log.d("outputString", outputString);
-            outputStream = new OutputStreamWriter(connection.getOutputStream());
-            outputStream.write(outputString);
-            outputStream.flush();
-            int responseCode = connection.getResponseCode();
-            Log.d("Response code", String.valueOf(responseCode));
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                inputStream = new InputStreamReader(connection.getInputStream());
-                Log.d("Request", connection.toString());
-                inputObject = (new Gson()).fromJson(inputStream, inputClass);
+            if (outputObject != null) {
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Content-Type", "application/json");
+                String outputString = (new Gson()).toJson(outputObject, outputClass);
+                Log.d("outputString", outputString);
+                outputStream = new OutputStreamWriter(connection.getOutputStream());
+                outputStream.write(outputString);
+                outputStream.flush();
+                int responseCode = connection.getResponseCode();
+                Log.d("Response code", String.valueOf(responseCode));
             }
+            else {
+                connection.setRequestMethod("POST");
+            }
+            inputStream = new InputStreamReader(connection.getInputStream());
+            inputObject = (new Gson()).fromJson(inputStream, inputClass);
         }
         catch (IOException e) {
             throw new Error("IO exception!");

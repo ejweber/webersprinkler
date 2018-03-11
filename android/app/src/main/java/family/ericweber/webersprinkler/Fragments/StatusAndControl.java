@@ -88,7 +88,7 @@ public class StatusAndControl extends Fragment {
             @Override
             public void onClick(View view) {
                 RestProgram program = (RestProgram) programSpinner.getSelectedItem();
-                String endpoint = "/api/run/program" + program.getId();
+                String endpoint = "/api/run/program/" + program.getId();
                 (new RestReturnStatus("post", endpoint, statusCallback)).execute();
             }
         });
