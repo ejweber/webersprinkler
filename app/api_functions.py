@@ -141,15 +141,19 @@ class API(object):
                     next_program = (program, parsed_time)
                     list_time = run_time
         log.debug ('Next program: {}'.format(next_program))
-        self.status['next'] = {'name': next_program[0]['name'],
-                               'run_time': list_time}
+        if next_program:
+            self.status['next'] = {'name': next_program[0]['name'],
+                                   'run_time': list_time}
+        else:
+            self.status['next'] = {'name': None, 'run_time': None}
         return next_program
 
     def schedule_next_program(self):
         log.debug('api.schedule_next_program() called')
         next_program = self.choose_next_program()
         log.debug(next_program)
-        self.run_program(time_until=next_program[1], program=next_program[0])
+        if next_program:
+            self.run_program(time_until=next_program[1], program=next_program[0])
 
     def add_or_update(self, request, program_id):
         if program_id is None:
