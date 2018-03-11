@@ -23,26 +23,29 @@ if os.geteuid() != 0:
     exit()
         
 # update Apache installation
-shellDo(['sudo', 'apt-get', 'upgrade', 'apache2', '-qq'])
-shellDo(['sudo', 'apt-get', 'upgrade', 'apache2-dev', '-qq'])
+shellDo(['apt-get', 'install', 'apache2', '-qq'])
+shellDo(['apt-get', 'install', 'apache2-dev', '-qq'])
 
 # set permissions for Apache to access GPIO pins
 shellDo(['adduser', 'www-data', 'gpio'])
 
 # install required Python modules
-shellDo(['sudo', 'pip3', 'install', 'mod_wsgi'])
-shellDo(['sudo', 'pip3', 'install', 'bottle'])
+shellDo(['pip3', 'install', 'mod_wsgi'])
+shellDo(['pip3', 'install', 'bottle'])
 
 # configure Apache virtual host to listen on correct port and run scripts
-shellDo(['sudo', 'cp', 'apache2/sprinkler.conf', '/etc/apache2/sites-available'])
-shellDo(['sudo', 'a2ensite', 'sprinkler'])
+shellDo(['cp', 'apache2/sprinkler.conf', '/etc/apache2/sites-available'])
+shellDo(['a2ensite', 'sprinkler'])
 
 # configure Apache to load mod_wsgi from the correct Python interpreter
 output = shellDo(['mod_wsgi-express', 'module-config'])
 wsgiLoadFile = open('apache2/wsgi.load', 'w')
 wsgiLoadFile.write(output)
-shellDo(['cp', 'apache2/wsgi.load', '/etc/apache2/sites-available'])
+wsgiLoadFile.close()
+shellDo(['cp', 'apache2/wsgi.load', '/etc/apache2/mods-available'])
 shellDo(['a2enmod', 'wsgi'])
 
 # restart Apache so changes can take effect
 shellDo(['service', 'apache2', 'restart'])
+
+log.close()
