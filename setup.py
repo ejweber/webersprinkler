@@ -1,5 +1,4 @@
-import subprocess
-import os
+import sys, subprocess, os, json, runpy
 log = open('install_log.txt', 'w')
 
 def shellDo(command):
@@ -18,10 +17,38 @@ def shellDo(command):
         print(errorString.format(error.returncode))
         exit()
 
+# ensure script runs as root
 if os.geteuid() != 0:
     print('Must run as root. Aborting...')
     exit()
-        
+    
+# verify and store user input
+if len(sys.argv) != 4:
+    print('Usage: python setup.py <base url> <local port> <global port>')
+    exit()
+baseUrl = sys.argv[1]
+localPort = sys.argv[2]
+globalPort = sys.argv[3]
+print('Server will listen at {} on local port {} and global port{}.'.format(
+    baseUrl, localPort, globalPort))
+
+# modify global config
+configTemplate = open('config/global_config.template', 'r')
+configDict = json.load(configTemplate)
+configTemplate.close()
+configDict['baseUrl'] = baseUrl
+configDict['localPort'] = int(localPort)
+configDict['globalPort'] = int(globalPort)
+configFile = open('config/global_config.json', 'w')
+json.dump(configDict, configFile, indent=4)
+configFile.close
+
+# modify local config
+
+os.chdir('config')
+runpy.run_path('propogate_config.py')
+os.chdir('..')
+
 # update Apache installation
 shellDo(['apt-get', 'install', 'apache2', '-qq'])
 shellDo(['apt-get', 'install', 'apache2-dev', '-qq'])

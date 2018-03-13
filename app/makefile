@@ -1,2 +1,0 @@
-all:
-	touch app.wsgi
