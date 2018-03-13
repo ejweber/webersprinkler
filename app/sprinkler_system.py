@@ -34,7 +34,7 @@ class Sprinklers(Timer):
     def read_system_config():
         log.debug('sprinklers.read_system_config() called')
         try:
-            with open('/home/pi/webersprinkler/app/system_config.json') as file:
+            with open('/home/pi/webersprinkler/app/config/system_config.json') as file:
                 config = json.load(file)
                 log.info('System config file loaded successfully.')
         except FileNotFoundError:

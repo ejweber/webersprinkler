@@ -1,4 +1,5 @@
 import sys, subprocess, os, json, runpy
+from config import propogate_config
 log = open('install_log.txt', 'w')
 
 def shellDo(command):
@@ -29,7 +30,7 @@ if len(sys.argv) != 4:
 baseUrl = sys.argv[1]
 localPort = sys.argv[2]
 globalPort = sys.argv[3]
-print('Server will listen at {} on local port {} and global port{}.'.format(
+print('Server will listen at {} on local port {} and global port {}.'.format(
     baseUrl, localPort, globalPort))
 
 # modify global config
@@ -41,12 +42,12 @@ configDict['localPort'] = int(localPort)
 configDict['globalPort'] = int(globalPort)
 configFile = open('config/global_config.json', 'w')
 json.dump(configDict, configFile, indent=4)
-configFile.close
+configFile.close()
 
 # modify local config
-
 os.chdir('config')
-runpy.run_path('propogate_config.py')
+configFile = open('global_config.json', 'r')
+propogate_config.propogate(configFile)
 os.chdir('..')
 
 # update Apache installation
