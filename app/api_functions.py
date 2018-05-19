@@ -1,8 +1,8 @@
 import json, time, logging.handlers, os, string, random
 import logging as log
+import lcd_functions as lcd
 from threading import Event
 from sprinkler_system import Sprinklers
-
 
 def set_up_logs():
     debug_file = '/home/pi/webersprinkler/app/log/debug.log'
@@ -33,7 +33,9 @@ def set_up_logs():
 
 
 class API(object):
-    
+  
+    idle_status = ('webersprinkler', 'Ready...')
+
     def __init__(self):
         self.programs = self.read_program_file()
         self.stop = Event()
@@ -45,6 +47,7 @@ class API(object):
         }
         self.sprinkler_thread = None
         self.schedule_next_program()
+        lcd.display(API.idle_status)
         log.info('Main program initialized successfully')
 
     @staticmethod

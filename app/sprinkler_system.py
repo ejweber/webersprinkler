@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 from threading import Timer
+import lcd_functions as lcd
 import logging as log
 import json, time, requests
 

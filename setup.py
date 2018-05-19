@@ -33,6 +33,17 @@ globalPort = sys.argv[3]
 print('Server will listen at {} on local port {} and global port {}.'.format(
     baseUrl, localPort, globalPort))
 
+# verify that i2c is enabled
+try:
+	print('Checking if i2c is enabled...', end=' ', flush=True)
+	i2c = open('/dev/i2c-1')
+	i2c.close()
+	print('[OK]')
+except FileNotFoundError as error:
+	log.write(error.output)
+	print('\ni2c must be enabled using raspi-config. Aborting...')
+	exit()
+
 # modify global config
 configTemplate = open('config/global_config.template', 'r')
 configDict = json.load(configTemplate)
@@ -54,12 +65,14 @@ os.chdir('..')
 shellDo(['apt-get', 'install', 'apache2', '-qq'])
 shellDo(['apt-get', 'install', 'apache2-dev', '-qq'])
 
-# set permissions for Apache to access GPIO pins
+# set permissions for Apache to access GPIO pins and i2c
 shellDo(['adduser', 'www-data', 'gpio'])
+shellDO(['usermod', '-a', '-G', 'i2c', 'www-data'])
 
 # install required Python modules
 shellDo(['pip3', 'install', 'mod_wsgi'])
 shellDo(['pip3', 'install', 'bottle'])
+shellDo(['pip3', 'install', 'smbus2'])
 
 # configure Apache virtual host to listen on correct port and run scripts
 shellDo(['cp', 'apache2/sprinkler.conf', '/etc/apache2/sites-available'])
