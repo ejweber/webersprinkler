@@ -67,7 +67,7 @@ shellDo(['apt-get', 'install', 'apache2-dev', '-qq'])
 
 # set permissions for Apache to access GPIO pins and i2c
 shellDo(['adduser', 'www-data', 'gpio'])
-shellDO(['usermod', '-a', '-G', 'i2c', 'www-data'])
+shellDo(['usermod', '-a', '-G', 'i2c', 'www-data'])
 
 # install required Python modules
 shellDo(['pip3', 'install', 'mod_wsgi'])
