@@ -72,7 +72,9 @@ class Sprinklers(Timer):
                     remaining = int(run_time - (time.time() - start_time))
                     m, s = divmod(remaining, 60)
                     self.status['time'] = '{:02}:{:02}'.format(m, s)
-                    # CHANGE LCD DISPLAY HERE
+                    lcd_status = (self.status['program'],
+                        self.status['zone'] + ' ' + self.status['time'])
+                    LCD.display(lcd_status)
                 if self.stop.is_set():
                     break
 
@@ -108,9 +110,10 @@ class Sprinklers(Timer):
 class LCD():
 	
     @staticmethod
-    def initialize():
-        lcd.init(0x27, 1)
-		
+    def idle():
+        idle_status = ('webersprinkler', 'Ready...')
+        LCD.display(idle_status)
+    
     @staticmethod
     def display(message):
         padded_message = []
@@ -118,6 +121,17 @@ class LCD():
             for x in range(16 - len(line)):
                 line = line + ' '
             padded_message.append(line)
-        lcd.write(0, 0, padded_message[0])
-        lcd.write(0, 1, padded_message[1])
+        try:
+            lcd.write(0, 0, padded_message[0])
+            lcd.write(0, 1, padded_message[1])
+        except OSError as error:
+            log.error(error.strerror)
+            
+    @staticmethod
+    def initialize():
+        try:
+            lcd.init(0x27, 1)
+            LCD.idle()
+        except OSError as error:
+            log.error(error.strerror)
 

@@ -32,8 +32,6 @@ def set_up_logs():
 
 
 class API(object):
-  
-    idle_status = ('webersprinkler', 'Ready...')
 
     def __init__(self):
         self.programs = self.read_program_file()
@@ -47,7 +45,6 @@ class API(object):
         self.sprinkler_thread = None
         self.schedule_next_program()
         LCD.initialize()
-        LCD.display(API.idle_status)
         log.info('Main program initialized successfully')
 
     @staticmethod

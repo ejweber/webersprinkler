@@ -30,7 +30,7 @@ def propogate(configInput=None):
     outputTemplate = string.Template(outputString)
     # TODO: handle stripping of baseUrl more elegantly
     outputString = outputTemplate.substitute(outputTemplate, 
-                                             serverName=inputDict['baseUrl'][10:])
+                                             serverName=inputDict['baseUrl'])
     outputFile = open('../apache2/sprinkler.conf', 'w')
     outputFile.write(outputString)
     outputFile.close()
