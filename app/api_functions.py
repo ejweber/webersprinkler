@@ -3,6 +3,8 @@ import logging as log
 from threading import Event
 from sprinkler_system import Sprinklers, LCD
 
+program_file = '/home/pi/webersprinkler/app/config/saved_programs.json'
+
 def set_up_logs():
     debug_file = '/home/pi/webersprinkler/app/log/debug.log'
     info_file = '/home/pi/webersprinkler/app/log/info.log'
@@ -50,8 +52,7 @@ class API(object):
     @staticmethod
     def read_program_file():
         try:
-            with open(
-                    '/home/pi/webersprinkler/app/saved_programs.json') as file:
+            with open(program_file) as file:
                 programs = json.load(file)
                 log.info('Saved program file loaded successfully')
         except FileNotFoundError:
