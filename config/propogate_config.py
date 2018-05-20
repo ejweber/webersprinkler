@@ -21,6 +21,7 @@ def propogate(configInput=None):
     outputDict['port'] = inputDict['localPort']
     outputFile = open('../app/config/system_config.json', 'w')
     json.dump(outputDict, outputFile, indent=4)
+    outputFile.write('\n')
     outputFile.close()
     
 ##### apache configuration
@@ -28,7 +29,6 @@ def propogate(configInput=None):
     outputString = configOutput.read()
     configOutput.close()
     outputTemplate = string.Template(outputString)
-    # TODO: handle stripping of baseUrl more elegantly
     outputString = outputTemplate.substitute(outputTemplate, 
                                              serverName=inputDict['baseUrl'])
     outputFile = open('../apache2/sprinkler.conf', 'w')
