@@ -25,6 +25,7 @@ def propogate(configInput=None):
     outputFile.close()
     
 ##### apache configuration
+    
     configOutput = open('../apache2/sprinkler.template', 'r')
     outputString = configOutput.read()
     configOutput.close()
@@ -35,5 +36,14 @@ def propogate(configInput=None):
     outputFile.write(outputString)
     outputFile.close()
     
+##### swagger configuration
+
+    with open('../swagger/swagger.template') as file:
+        outputDict = json.load(file)
+    outputDict['host'] = inputDict['baseUrl'] + ':' + str(inputDict['globalPort'])
+    with open('../swagger/swagger.json', 'w') as file:
+        json.dump(outputDict, file, indent=4)
+        file.write('\n')
+	
 if __name__ == '__main__':
     propogate()

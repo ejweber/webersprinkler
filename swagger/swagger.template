@@ -1,0 +1,306 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "This is a simple API",
+    "version" : "1.0.0",
+    "title" : "WeberSprinkler API Documentation",
+    "contact" : {
+      "email" : "webericjames@gmail.com"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host" : null,
+  "basePath" : "/api",
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/status" : {
+      "get" : {
+        "summary" : "get current system status",
+        "description" : "Returns information about the current sprinkler activity and next scheduled program.\n",
+        "operationId" : "status",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Status"
+            }
+          }
+        }
+      }
+    },
+    "/run/manual/{zoneNumber}" : {
+      "post" : {
+        "summary" : "run zone indefinitely",
+        "description" : "Runs specified zone indefinitely and returns status information.",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "zoneNumber",
+          "in" : "path",
+          "description" : "zone number",
+          "required" : true,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "specified zone successfully started",
+            "schema" : {
+              "$ref" : "#/definitions/Status"
+            }
+          },
+          "404" : {
+            "description" : "specified zone does not exist"
+          }
+        }
+      }
+    },
+    "/run/manual/{zoneNumber}/{time}" : {
+      "post" : {
+        "summary" : "run zone for specified amount of time",
+        "description" : "Runs specified zone for specified time in minutes and returns status information.",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "zoneNumber",
+          "in" : "path",
+          "description" : "zone number",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "name" : "time",
+          "in" : "path",
+          "description" : "time in minutes",
+          "required" : true,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "specified zone successfully started",
+            "schema" : {
+              "$ref" : "#/definitions/Status"
+            }
+          },
+          "404" : {
+            "description" : "specified zone does not exist"
+          }
+        }
+      }
+    },
+    "/run/program/{programId}" : {
+      "post" : {
+        "summary" : "run program",
+        "description" : "Runs specified program and returns status information.",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "programId",
+          "in" : "path",
+          "description" : "program ID",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "specified program successfully started",
+            "schema" : {
+              "$ref" : "#/definitions/#definitions/Status"
+            }
+          },
+          "404" : {
+            "description" : "specified program does not exist"
+          }
+        }
+      }
+    },
+    "/stop" : {
+      "post" : {
+        "summary" : "stop sprinklers",
+        "description" : "Stops all sprinkler activity, whether manual or programmatic.",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "sprinklers stopped",
+            "schema" : {
+              "$ref" : "#/definitions/Status"
+            }
+          }
+        }
+      }
+    },
+    "/programs" : {
+      "get" : {
+        "summary" : "get list of all programs",
+        "description" : "Returns an array of objects, each representing a stored program.",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "operation successful",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Program"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/programs/{programId}" : {
+      "get" : {
+        "summary" : "get single program",
+        "description" : "Returns a single object representing the specified program.",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "programId",
+          "in" : "path",
+          "description" : "program ID",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "operation successful",
+            "schema" : {
+              "$ref" : "#/definitions/Program"
+            }
+          },
+          "404" : {
+            "description" : "specified program does not exist"
+          }
+        }
+      },
+      "delete" : {
+        "summary" : "delete single program",
+        "description" : "Deletes a specific program and returns updated array of programs",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "programId",
+          "in" : "path",
+          "description" : "program ID",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "operation successful",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Program"
+              }
+            }
+          },
+          "404" : {
+            "description" : "specified program does not exist"
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "Status" : {
+      "type" : "object",
+      "required" : [ "next", "program", "time", "zone" ],
+      "properties" : {
+        "program" : {
+          "type" : "string",
+          "example" : "Program A"
+        },
+        "zone" : {
+          "type" : "string",
+          "example" : "Zone 1"
+        },
+        "time" : {
+          "type" : "string",
+          "example" : "5:00"
+        },
+        "next" : {
+          "$ref" : "#/definitions/Next"
+        }
+      },
+      "example" : {
+        "next" : {
+          "run_time" : "Monday 5:00",
+          "name" : "Program A"
+        },
+        "zone" : "Zone 1",
+        "program" : "Program A",
+        "time" : "5:00"
+      }
+    },
+    "Next" : {
+      "required" : [ "name", "run_time" ],
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "example" : "Program A"
+        },
+        "run_time" : {
+          "type" : "string",
+          "example" : "Monday 5:00"
+        }
+      },
+      "example" : {
+        "run_time" : "Monday 5:00",
+        "name" : "Program A"
+      }
+    },
+    "Program" : {
+      "type" : "object",
+      "required" : [ "description", "name", "recurring", "run_times", "zone_times" ],
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "example" : "Program A"
+        },
+        "description" : {
+          "type" : "string",
+          "example" : "Regular summer watering"
+        },
+        "id" : {
+          "type" : "string",
+          "example" : "b9URE34a"
+        },
+        "recurring" : {
+          "type" : "boolean",
+          "example" : true
+        },
+        "run_times" : {
+          "type" : "array",
+          "example" : [ "Monday 5:30", "Wednesday 5:30", "Friday 5:30" ],
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "zone_times" : {
+          "type" : "array",
+          "example" : [ 5, 5, 5, 5, 5 ],
+          "items" : {
+            "type" : "integer"
+          }
+        }
+      },
+      "example" : {
+        "zone_times" : [ 5, 5, 5, 5, 5 ],
+        "run_times" : [ "Monday 5:30", "Wednesday 5:30", "Friday 5:30" ],
+        "recurring" : true,
+        "name" : "Program A",
+        "description" : "Regular summer watering",
+        "id" : "b9URE34a"
+      }
+    }
+  },
+  "parameters" : {
+    "ProgramId" : {
+      "name" : "programId",
+      "in" : "path",
+      "description" : "program ID",
+      "required" : true,
+      "type" : "string"
+    }
+  }
+}

@@ -59,6 +59,10 @@ class API(object):
             log.warning('Saved program file not found')
             programs = {}
         return programs
+        
+    def save_programs():
+        with open(program_file, 'w') as file:
+            file.write(json.dumps(self.programs))
 
     def run_program(self, time_until=0, program=None):
         log.debug('api.run_program() called')
@@ -262,6 +266,7 @@ class API(object):
                 old_program = new_program
                 return
         self.programs.append(new_program)
+        self.save_programs()
 
     @staticmethod
     def get_new_id():

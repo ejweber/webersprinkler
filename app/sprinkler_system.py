@@ -4,6 +4,7 @@ import lcd_functions as lcd
 import logging as log
 import json, time, requests
 
+config_file = '/home/pi/webersprinkler/app/config/system_config.json'
 
 class Sprinklers(Timer):
     
@@ -36,7 +37,7 @@ class Sprinklers(Timer):
     def read_system_config():
         log.debug('sprinklers.read_system_config() called')
         try:
-            with open('/home/pi/webersprinkler/app/config/system_config.json') as file:
+            with open(config_file) as file:
                 config = json.load(file)
                 log.info('System config file loaded successfully.')
         except FileNotFoundError:
@@ -89,7 +90,7 @@ class Sprinklers(Timer):
         self.status['time'] = None
         self.status['program'] = None
         self.status['zone'] = None
-        # CHANGE LCD DISPLAY HERE
+        LCD.idle()
         GPIO.cleanup()
         if not self.stop.is_set(): # only reschedule if thread stops on own
             self.reschedule()
