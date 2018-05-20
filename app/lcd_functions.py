@@ -94,15 +94,6 @@ def write(x, y, str):
 
 	for chr in str:
 		send_data(ord(chr))
-		
-def display(message):
-    padded_message = []
-    for line in message:
-        for x in range(16 - len(line)):
-            line = line + ' '
-        padded_message.append(line)
-    write(0, 0, padded_message[0])
-    write(0, 1, padded_message[1])
 
 if __name__ == '__main__':
 	init(0x27, 1)

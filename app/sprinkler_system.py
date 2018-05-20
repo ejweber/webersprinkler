@@ -6,6 +6,7 @@ import json, time, requests
 
 
 class Sprinklers(Timer):
+    
     def __init__(self, time_until, program, status, stop):
         try:
             Timer.__init__(self, time_until, self.thread_task)
@@ -103,4 +104,20 @@ class Sprinklers(Timer):
         if requests.post(url).status_code != 200:
             log.warning('Request to schedule next task failed')
 
+
+class LCD():
+	
+    @staticmethod
+    def initialize():
+        lcd.init(0x27, 1)
+		
+    @staticmethod
+    def display(message):
+        padded_message = []
+        for line in message:
+            for x in range(16 - len(line)):
+                line = line + ' '
+            padded_message.append(line)
+        lcd.write(0, 0, padded_message[0])
+        lcd.write(0, 1, padded_message[1])
 
