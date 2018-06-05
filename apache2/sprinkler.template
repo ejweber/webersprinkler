@@ -19,11 +19,11 @@
 
     # set wsgi to run in daemon mode
     # allows for wsgi script to be reloaded without server restart
-    WSGIDaemonProcess sprinkler threads=3 display-name=%{GROUP}
+    WSGIDaemonProcess sprinkler display-name=%{GROUP}
     WSGIProcessGroup sprinkler
 
     # location of the wsgi application callable
-    WSGIScriptAlias /api /home/pi/webersprinkler/app/app.wsgi
+    WSGIScriptAlias /api /home/pi/webersprinkler/app/app.wsgi process-group=sprinkler application-group=sprinkler
 
     #security directives allowing scripts to be served by apache
     <Directory /home/pi/webersprinkler/>

@@ -36,6 +36,7 @@ def set_up_logs():
 class API(object):
 
     def __init__(self):
+        log.info('api._init_() called')
         self.programs = self.read_program_file()
         self.stop = Event()
         self.status = {
