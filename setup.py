@@ -22,7 +22,7 @@ def shellDo(command):
 if os.geteuid() != 0:
     print('Must run as root. Aborting...')
     exit()
-    
+
 # verify and store user input
 if len(sys.argv) != 4:
     print('Usage: python setup.py <base url> <local port> <global port>')
@@ -69,10 +69,25 @@ shellDo(['apt-get', 'install', 'apache2-dev', '-qq'])
 shellDo(['adduser', 'www-data', 'gpio'])
 shellDo(['usermod', '-a', '-G', 'i2c', 'www-data'])
 
+# set permissions for Apache to create and modify logs
+shellDo(['chgrp', 'www-data', 'app/log'])
+shellDo(['chmod', 'g+w', 'app/log'])
+
+# set permissions for Apache to modify saved programs
+shellDo(['cp', 'app/config/saved_programs.default', 'app/config/saved_programs.json'])
+shellDo(['chown', 'pi', 'app/config/saved_programs.json'])
+shellDo(['chgrp', 'www-data', 'app/config/saved_programs.json'])
+shellDo(['chmod', 'g+w', 'app/config/saved_programs.json'])
+
+# install pip
+shellDo(['apt-get', 'install', 'python3-pip', '-qq'])
+
 # install required Python modules
 shellDo(['pip3', 'install', 'mod_wsgi'])
 shellDo(['pip3', 'install', 'bottle'])
 shellDo(['pip3', 'install', 'smbus2'])
+shellDo(['pip3', 'install', 'RPi.GPIO'])
+shellDo(['pip3', 'install', 'requests'])
 
 # configure Apache virtual host to listen on correct port and run scripts
 shellDo(['cp', 'apache2/sprinkler.conf', '/etc/apache2/sites-available'])

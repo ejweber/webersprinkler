@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Default",
+    "id": "00000000",
+    "description": "Default program",
+    "recurring": false,
+    "run_times": [],
+    "zone_times": [5, 5, 5, 5, 5]
+  }
+]

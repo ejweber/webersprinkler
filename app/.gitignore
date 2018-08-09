@@ -165,6 +165,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-/log/
+/log/*
 
 # End of https://www.gitignore.io/api/python,pycharm+all
