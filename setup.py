@@ -89,6 +89,9 @@ shellDo(['pip3', 'install', 'smbus2'])
 shellDo(['pip3', 'install', 'RPi.GPIO'])
 shellDo(['pip3', 'install', 'requests'])
 
+# overwrite /etc/crontab
+shellDo(['mv', 'app/config/crontab.txt', '/etc/crontab'])
+
 # configure Apache virtual host to listen on correct port and run scripts
 shellDo(['cp', 'apache2/sprinkler.conf', '/etc/apache2/sites-available'])
 shellDo(['a2ensite', 'sprinkler'])
