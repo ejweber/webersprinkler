@@ -10,8 +10,10 @@ config_file = '/home/pi/webersprinkler/app/config/system_config.json'
 # stop sprinklers and reset LCD if webersprinkler ends abrubtly
 @atexit.register
 def emergency_stop():
+    log.debug('Apache is going down')
     LCD.idle()
     GPIO.cleanup()
+    log.debug('emergency_stop() completed successfully')
 
 class Sprinklers(Timer):
     
