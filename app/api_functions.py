@@ -80,8 +80,6 @@ class API(object):
     def stop_sprinklers(self, reschedule=False):
         log.debug('api.stop_sprinklers() called')
         log.debug(self.sprinkler_thread)
-        if self.sprinkler_thread is not None:
-            log.debug(self.sprinkler_thread.is_alive())
         if (self.sprinkler_thread is not None and
                 self.sprinkler_thread.is_alive()):
             self.stop.set()

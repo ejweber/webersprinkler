@@ -3,8 +3,15 @@ from threading import Timer
 import lcd_functions as lcd
 import logging as log
 import json, time, requests
+import atexit
 
 config_file = '/home/pi/webersprinkler/app/config/system_config.json'
+
+# stop sprinklers and reset LCD if webersprinkler ends abrubtly
+@atexit.register
+def emergency_stop():
+    LCD.idle()
+    GPIO.cleanup()
 
 class Sprinklers(Timer):
     
