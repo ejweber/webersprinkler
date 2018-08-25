@@ -10,10 +10,10 @@ config_file = '/home/pi/webersprinkler/app/config/system_config.json'
 # stop sprinklers and reset LCD if webersprinkler ends abrubtly
 @atexit.register
 def emergency_stop():
-    log.debug('Apache is going down')
+    log.error('Apache is going down')
     LCD.idle()
     GPIO.cleanup()
-    log.debug('emergency_stop() completed successfully')
+    log.error('emergency_stop() completed successfully')
 
 class Sprinklers(Timer):
     
@@ -135,7 +135,7 @@ class LCD():
             lcd.write(0, 0, padded_message[0])
             lcd.write(0, 1, padded_message[1])
         except OSError as error:
-            log.error(error.strerror)
+            pass
             
     @staticmethod
     def initialize():
@@ -143,5 +143,5 @@ class LCD():
             lcd.init(0x27, 1)
             LCD.idle()
         except OSError as error:
-            log.error(error.strerror)
+            log.error('Problem writing to LCD display')
 
